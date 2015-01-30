@@ -70,7 +70,7 @@ movesHorizontalRight board player = (movesHorizontalRight' (board !! 0) player 0
 				(movesHorizontalRight' (board !! 6) player 6) ++
 				(movesHorizontalRight' (board !! 7) player 7)
 
--- | Compiles a list of valid moves in a single row (made valid by pieces to
+-- | Compiles a list of valid moves in a single row (made valid by pieces to the right of the returned spaces)
 movesHorizontalRight' :: [Cell] -> Player -> Int -> [(Int, Int)]
 movesHorizontalRight' [] _ _ = []
 movesHorizontalRight' [x] _ _ = []
