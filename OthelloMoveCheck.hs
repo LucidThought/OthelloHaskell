@@ -52,15 +52,34 @@ movesHorizontalLeft' row player rowNum
 	| (valid && empty) == False = next
 	where valid = movesInRow (tail (reverse row)) player
 	      coord = [((length row)-1, rowNum)]
-	      next = movesHorizontalLeft' (dropLast row) player rowNum
+	      next = movesHorizontalLeft' (tail row) player rowNum
 	      empty = cell2Char (head (reverse row)) == '_'
-movesHorizontalLeft' _ _ _ = [(10,10)]
+movesHorizontalLeft' _ _ _ = []
 
 --movesHorizontalLeft'' :: Cell -> [Cell] -> Player -> True
 --movesHorizontalLeft'' cell row player
 
 movesHorizontalRight  :: Board -> Player -> [(Int, Int)]
-movesHorizontalRight _ _ = []
+movesHorizontalRight _ _ = (movesHorizontalRight' (board !! 0) player 0) ++
+				(movesHorizontalRight' (board !! 1) player 1) ++
+				(movesHorizontalRight' (board !! 2) player 2) ++
+				(movesHorizontalRight' (board !! 3) player 3) ++
+				(movesHorizontalRight' (board !! 4) player 4) ++
+				(movesHorizontalRight' (board !! 5) player 5) ++
+				(movesHorizontalRight' (board !! 6) player 6) ++
+				(movesHorizontalRight' (board !! 7) player 7)
+
+movesHorizontalRight' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesHorizontalRight' [] _ _ = []
+movesHorizontalRight' [x] _ _ = []
+movesHorizontalRight' row player rowNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInRow (tail row) player
+	      coord = [(8-(length row), rowNum)]
+	      next = movesHorizontalRight' (dropLast row) player rowNum
+	      empty = cell2Char (head (reverse row)) == '_'
+movesHorizontalRight' _ _ _ = []
 
 movesVerticalUp  :: Board -> Player -> [(Int, Int)]
 movesVerticalUp _ _ = []
@@ -129,10 +148,10 @@ tile White = W
 
 demoBoard = [ [E, E, E, E, E, E, E, E],
 	      [E, E, E, E, E, E, E, E],
-              [E, E, E, E, E, E, E, E],
+              [E, E, E, E, E, W, E, E],
               [E, E, E, W, B, E, E, E],
               [E, E, E, B, W, E, E, E],
-              [E, E, E, E, E, E, E, E],
+              [E, E, W, E, E, E, E, E],
               [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E] ]
 --Valid moves for B - (5,4) by HorzLeft, (4,5) by VertUp, (2,3) by HorzRight, (3,2) by VertDown
