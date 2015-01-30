@@ -52,7 +52,7 @@ movesHorizontalLeft' row player rowNum
 	| (valid && empty) == False = next
 	where valid = movesInRow (tail (reverse row)) player
 	      coord = [((length row)-1, rowNum)]
-	      next = movesHorizontalLeft' (tail row) player rowNum
+	      next = movesHorizontalLeft' (dropLast row) player rowNum
 	      empty = cell2Char (head (reverse row)) == '_'
 movesHorizontalLeft' _ _ _ = [(10,10)]
 
