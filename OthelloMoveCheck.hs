@@ -50,7 +50,7 @@ movesHorizontalLeft' [x] _ _ = []
 movesHorizontalLeft' row player rowNum
 	| (valid && empty) == True = coord ++ next
 	| (valid && empty) == False = next
-	where valid = movesInRow (tail (reverse row)) player
+	where valid = movesInLine (tail (reverse row)) player
 	      coord = [((length row)-1, rowNum)]
 	      next = movesHorizontalLeft' (dropLast row) player rowNum
 	      empty = cell2Char (head (reverse row)) == '_'
@@ -74,14 +74,33 @@ movesHorizontalRight' [x] _ _ = []
 movesHorizontalRight' row player rowNum
 	| (valid && empty) == True = coord ++ next
 	| (valid && empty) == False = next
-	where valid = movesInRow (tail row) player
+	where valid = movesInLine (tail row) player
 	      coord = [(8-(length row), rowNum)]
 	      next = movesHorizontalRight' (tail row) player rowNum
 	      empty = cell2Char (head row) == '_'
 movesHorizontalRight' _ _ _ = []
 
 movesVerticalUp  :: Board -> Player -> [(Int, Int)]
-movesVerticalUp _ _ = []
+movesVerticalUp board player = (movesVerticalUp' (map (!! 0) board) player 0) ++
+				(movesVerticalUp' (map (!! 1) board) player 1) ++
+				(movesVerticalUp' (map (!! 2) board) player 2) ++
+				(movesVerticalUp' (map (!! 3) board) player 3) ++
+				(movesVerticalUp' (map (!! 4) board) player 4) ++
+				(movesVerticalUp' (map (!! 5) board) player 5) ++
+				(movesVerticalUp' (map (!! 6) board) player 6) ++
+				(movesVerticalUp' (map (!! 7) board) player 7)
+
+movesVerticalUp' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesVerticalUp' [] _ _ = []
+movesVerticalUp' [x] _ _ = []
+movesVerticalUp' column player columnNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail (reverse column)) player
+	      coord = [(columnNum, (length column)-1)]
+	      next = movesVerticalUp' (dropLast column) player columnNum
+	      empty = cell2Char (head column) == '_'
+movesVerticalUp' _ _ _ = []
 
 movesVerticalDown  :: Board -> Player -> [(Int, Int)]
 movesVerticalDown _ _ = []
@@ -98,10 +117,10 @@ movesDiagonalDownRight _ _ = []
 movesDiagonalDownLeft  :: Board -> Player -> [(Int, Int)]
 movesDiagonalDownLeft _ _ = []
 
-movesInRow :: [Cell] -> Player -> Bool
+movesInLine :: [Cell] -> Player -> Bool
 --Assumes that tile will be placed in -1
 --i.e. give this the path from placed tile to edge of board, excluding the tile
-movesInRow row player
+movesInLine row player
 	|hasAlly row player == True = allEnemy (frame row player) player
 	|hasAlly row player == False = False
 
