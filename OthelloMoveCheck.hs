@@ -58,7 +58,7 @@ movesHorizontalLeft' _ _ _ = []
 --movesHorizontalLeft'' cell row player
 
 movesHorizontalRight  :: Board -> Player -> [(Int, Int)]
-movesHorizontalRight _ _ = (movesHorizontalRight' (board !! 0) player 0) ++
+movesHorizontalRight board player = (movesHorizontalRight' (board !! 0) player 0) ++
 				(movesHorizontalRight' (board !! 1) player 1) ++
 				(movesHorizontalRight' (board !! 2) player 2) ++
 				(movesHorizontalRight' (board !! 3) player 3) ++
@@ -146,10 +146,10 @@ tile White = W
 
 demoBoard = [ [E, E, E, E, E, E, E, E],
 	      [E, E, E, E, E, E, E, E],
-              [E, E, E, E, E, W, E, E],
+              [E, E, E, E, E, E, E, E],
               [E, E, E, W, B, E, E, E],
               [E, E, E, B, W, E, E, E],
-              [E, E, W, E, E, E, E, E],
+              [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E] ]
 --Valid moves for B - (5,4) by HorzLeft, (4,5) by VertUp, (2,3) by HorzRight, (3,2) by VertDown
