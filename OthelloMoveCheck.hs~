@@ -11,8 +11,6 @@ import OthelloTools
 import Othello
 -}
 
-module OthelloMoveCheck where 
-
 moves :: Board -> Player -> [(Int, Int)]
 --take board and player
 --find all valid moves for this player, return in array as coords
