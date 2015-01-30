@@ -54,10 +54,7 @@ movesHorizontalLeft' row player rowNum
 	      coord = [((length row)-1, rowNum)]
 	      next = movesHorizontalLeft' (tail row) player rowNum
 	      empty = cell2Char (head (reverse row)) == '_'
-movesHorizontalLeft' _ _ _ = []
-
---movesHorizontalLeft'' :: Cell -> [Cell] -> Player -> True
---movesHorizontalLeft'' cell row player
+movesHorizontalLeft' _ _ _ = [(10,10)]
 
 -- | Compiles a list of valid moves (made valid by pieces to the horizontal right of the returned spaces)
 movesHorizontalRight  :: Board -> Player -> [(Int, Int)]
@@ -80,7 +77,7 @@ movesHorizontalRight' row player rowNum
 	where valid = movesInRow (tail row) player
 	      coord = [(8-(length row), rowNum)]
 	      next = movesHorizontalRight' (dropLast row) player rowNum
-	      empty = cell2Char (head (reverse row)) == '_'
+	      empty = cell2Char (head row) == '_'
 movesHorizontalRight' _ _ _ = []
 
 movesVerticalUp  :: Board -> Player -> [(Int, Int)]
