@@ -32,6 +32,7 @@ movesVertical board player = (movesVerticalDown board player) ++ (movesVerticalU
 movesHorizontal  :: Board -> Player -> [(Int, Int)]
 movesHorizontal board player = (movesHorizontalLeft board player) ++ (movesHorizontalRight board player)
 
+-- | Compiles a list of valid moves (made valid by pieces of the returned spaces)
 movesHorizontalLeft  :: [[Cell]] -> Player -> [(Int, Int)]
 movesHorizontalLeft board player = (movesHorizontalLeft' (board !! 0) player 0) ++
 				(movesHorizontalLeft' (board !! 1) player 1) ++
@@ -42,6 +43,7 @@ movesHorizontalLeft board player = (movesHorizontalLeft' (board !! 0) player 0) 
 				(movesHorizontalLeft' (board !! 6) player 6) ++
 				(movesHorizontalLeft' (board !! 7) player 7)
 
+-- | Compiles a list of valid moves on a single row (made valid by pieces to the horizonal left of the returned space)
 movesHorizontalLeft' :: [Cell] -> Player -> Int -> [(Int, Int)]
 movesHorizontalLeft' [] _ _ = []
 movesHorizontalLeft' [x] _ _ = []
