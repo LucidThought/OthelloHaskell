@@ -1,5 +1,4 @@
 {-
-import Debug.Trace 
 import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
 import System.Random
@@ -7,11 +6,14 @@ import Data.List ((\\))
 import System.Environment
 import System.IO.Unsafe
 import Data.Either
-import OthelloTools
-import Othello
--}
+
+-} 
+--import Othello
 
 module OthelloMoveCheck where 
+
+import OthelloTools
+import Debug.Trace
 
 moves :: Board -> Player -> [(Int, Int)]
 --take board and player
@@ -44,12 +46,13 @@ movesHorizontalLeft' :: [Cell] -> Player -> Int -> [(Int, Int)]
 movesHorizontalLeft' [] _ _ = []
 movesHorizontalLeft' [x] _ _ = []
 movesHorizontalLeft' row player rowNum
-	|valid && empty == True = coord ++ next
-	|valid && empty == False = next
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
 	where valid = movesInRow (tail (reverse row)) player
 	      coord = [((length row)-1, rowNum)]
 	      next = movesHorizontalLeft' (dropLast row) player rowNum
 	      empty = cell2Char (head (reverse row)) == '_'
+movesHorizontalLeft' _ _ _ = [(10,10)]
 
 --movesHorizontalLeft'' :: Cell -> [Cell] -> Player -> True
 --movesHorizontalLeft'' cell row player
@@ -123,10 +126,11 @@ tile Black = B
 tile White = W
 
 demoBoard = [ [E, E, E, E, E, E, E, E],
+	      [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E],
               [E, E, E, W, B, E, E, E],
               [E, E, E, B, W, E, E, E],
               [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, E, E] ]
---Valid moves for B - (3,1) by HorzLeft, (2,2) by VertUp, (3,5) by HorzRight, (4,4) by VertDown
+--Valid moves for B - (5,4) by HorzLeft, (4,5) by VertUp, (2,3) by HorzRight, (3,2) by VertDown
