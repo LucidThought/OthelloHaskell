@@ -76,7 +76,7 @@ movesHorizontalRight' row player rowNum
 	| (valid && empty) == False = next
 	where valid = movesInRow (tail row) player
 	      coord = [(8-(length row), rowNum)]
-	      next = movesHorizontalRight' (dropLast row) player rowNum
+	      next = movesHorizontalRight' (tail row) player rowNum
 	      empty = cell2Char (head row) == '_'
 movesHorizontalRight' _ _ _ = []
 
