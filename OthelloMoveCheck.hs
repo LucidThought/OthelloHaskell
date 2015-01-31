@@ -125,7 +125,14 @@ movesVerticalDown' column player columnNum
 movesVerticalDown' _ _ _ = []
 
 movesDiagonalUpRight  :: Board -> Player -> [(Int, Int)]
-movesDiagonalUpRight _ _ = []
+movesDiagonalUpRight board player =(movesDiagonalUpRight' (map (!! 0) board) player 0) ++
+				(movesDiagonalUpRight' (map (!! 1) board) player 1) ++
+				(movesDiagonalUpRight' (map (!! 2) board) player 2) ++
+				(movesDiagonalUpRight' (map (!! 3) board) player 3) ++
+				(movesDiagonalUpRight' (map (!! 4) board) player 4) ++
+				(movesDiagonalUpRight' (map (!! 5) board) player 5) ++
+				(movesDiagonalUpRight' (map (!! 6) board) player 6) ++
+				(movesDiagonalUpRight' (map (!! 7) board) player 7)
 
 movesDiagonalUpLeft  :: Board -> Player -> [(Int, Int)]
 movesDiagonalUpLeft _ _ = []
