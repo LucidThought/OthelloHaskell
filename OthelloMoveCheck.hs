@@ -125,14 +125,27 @@ movesVerticalDown' column player columnNum
 movesVerticalDown' _ _ _ = []
 
 movesDiagonalUpRight  :: Board -> Player -> [(Int, Int)]
-movesDiagonalUpRight board player =(movesDiagonalUpRight' (map (!! 0) board) player 0) ++
-				(movesDiagonalUpRight' (map (!! 1) board) player 1) ++
-				(movesDiagonalUpRight' (map (!! 2) board) player 2) ++
-				(movesDiagonalUpRight' (map (!! 3) board) player 3) ++
-				(movesDiagonalUpRight' (map (!! 4) board) player 4) ++
-				(movesDiagonalUpRight' (map (!! 5) board) player 5) ++
-				(movesDiagonalUpRight' (map (!! 6) board) player 6) ++
-				(movesDiagonalUpRight' (map (!! 7) board) player 7)
+movesDiagonalUpRight board player =(movesDiagonalUpRight' (map (!! 0) board45) player 0) ++
+				(movesDiagonalUpRight' (map (!! 1) board45) player 1) ++
+				(movesDiagonalUpRight' (map (!! 2) board45) player 2) ++
+				(movesDiagonalUpRight' (map (!! 3) board45) player 3) ++
+				(movesDiagonalUpRight' (map (!! 4) board45) player 4) ++
+				(movesDiagonalUpRight' (map (!! 5) board45) player 5) ++
+				(movesDiagonalUpRight' (map (!! 6) board45) player 6) ++
+				(movesDiagonalUpRight' (map (!! 7) board45) player 7)
+				where board45 = clock45 board
+
+movesDiagonalUpRight'  :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesDiagonalUpRight' [] _ _ = []
+movesDiagonalUpRight' [x] _ _ = []
+movesDiagonalUpRight' row player rowNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail row) player
+	      coord = [rowNum, rowNum)]
+	      next = movesHorizontalRight' (tail row) player rowNum
+	      empty = cell2Char (head row) == '_'
+movesDiagonalUpRight' _ _ _ = []
 
 movesDiagonalUpLeft  :: Board -> Player -> [(Int, Int)]
 movesDiagonalUpLeft _ _ = []
