@@ -103,7 +103,26 @@ movesVerticalUp' column player columnNum
 movesVerticalUp' _ _ _ = []
 
 movesVerticalDown  :: Board -> Player -> [(Int, Int)]
-movesVerticalDown _ _ = []
+movesVerticalDown board player =(movesVerticalDown' (map (!! 0) board) player 0) ++
+				(movesVerticalDown' (map (!! 1) board) player 1) ++
+				(movesVerticalDown' (map (!! 2) board) player 2) ++
+				(movesVerticalDown' (map (!! 3) board) player 3) ++
+				(movesVerticalDown' (map (!! 4) board) player 4) ++
+				(movesVerticalDown' (map (!! 5) board) player 5) ++
+				(movesVerticalDown' (map (!! 6) board) player 6) ++
+				(movesVerticalDown' (map (!! 7) board) player 7)
+
+movesVerticalDown' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesVerticalDown' [] _ _ = []
+movesVerticalDown' [x] _ _ = []
+movesVerticalDown' column player columnNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail column) player
+	      coord = [(columnNum,8-(length column))]
+	      next = movesVerticalDown' (tail column) player columnNum
+	      empty = cell2Char (head column) == '_'
+movesVerticalDown' _ _ _ = []
 
 movesDiagonalUpRight  :: Board -> Player -> [(Int, Int)]
 movesDiagonalUpRight _ _ = []
@@ -164,12 +183,13 @@ tile :: Player -> Cell
 tile Black = B
 tile White = W
 
-demoBoard = [ [E, E, E, E, E, E, E, E],
-	      [E, E, E, E, E, E, E, E],
-              [E, E, E, E, E, E, E, E],
-              [E, E, E, W, B, E, E, E],
-              [E, E, E, B, W, E, E, E],
-              [E, E, E, E, E, E, E, E],
-              [E, E, E, E, E, E, E, E],
-              [E, E, E, E, E, E, E, E] ]
+	     --0  1  2  3  4  5  6  7
+demoBoard = [ [E, E, E, E, E, E, E, E],	--0
+	      [E, E, E, E, E, E, E, E], --1
+              [E, E, E, E, E, E, E, E],	--2
+              [E, E, E, W, B, E, E, E], --3
+              [E, E, E, B, W, E, E, E], --4
+              [E, E, E, E, E, E, E, E], --5
+              [E, E, E, E, E, E, E, E], --6
+              [E, E, E, E, E, E, E, E] ]--7
 --Valid moves for B - (5,4) by HorzLeft, (4,5) by VertUp, (2,3) by HorzRight, (3,2) by VertDown
