@@ -146,9 +146,9 @@ movesDiagonalDownLeft _ _ = []
 movesInLine :: [Cell] -> Player -> Bool
 --Assumes that tile will be placed in -1
 --i.e. give this the path from placed tile to edge of board, excluding the tile
-movesInLine row player
-	|hasAlly row player == True = allEnemy (frame row player) player
-	|hasAlly row player == False = False
+movesInLine line player
+	|hasAlly line player == True = allEnemy (frame line player) player
+	|hasAlly line player == False = False
 
 --coordMap :: (Int,Int) -> Cell
 --takes coords and returns corresponding cell from board
