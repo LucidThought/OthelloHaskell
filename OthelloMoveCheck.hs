@@ -125,27 +125,34 @@ movesVerticalDown' column player columnNum
 movesVerticalDown' _ _ _ = []
 
 movesDiagonalUpRight  :: Board -> Player -> [(Int, Int)]
-movesDiagonalUpRight board player =(movesDiagonalUpRight' (map (!! 0) board45) player 0) ++
-				(movesDiagonalUpRight' (map (!! 1) board45) player 1) ++
-				(movesDiagonalUpRight' (map (!! 2) board45) player 2) ++
-				(movesDiagonalUpRight' (map (!! 3) board45) player 3) ++
-				(movesDiagonalUpRight' (map (!! 4) board45) player 4) ++
-				(movesDiagonalUpRight' (map (!! 5) board45) player 5) ++
-				(movesDiagonalUpRight' (map (!! 6) board45) player 6) ++
-				(movesDiagonalUpRight' (map (!! 7) board45) player 7)
+movesDiagonalUpRight board player =(movesDiagonalUpRight' (board45 !! 0) player 0 0) ++
+				(movesDiagonalUpRight' (board45 !! 1) player 1 0) ++
+				(movesDiagonalUpRight' (board45 !! 2) player 2 0) ++
+				(movesDiagonalUpRight' (board45 !! 3) player 3 0) ++
+				(movesDiagonalUpRight' (board45 !! 4) player 4 0) ++
+				(movesDiagonalUpRight' (board45 !! 5) player 5 0) ++
+				(movesDiagonalUpRight' (board45 !! 6) player 6 0) ++
+				(movesDiagonalUpRight' (board45 !! 7) player 7 0) ++
+				(movesDiagonalUpRight' (board45 !! 8) player 8 0) ++
+				(movesDiagonalUpRight' (board45 !! 9) player 9 0) ++
+				(movesDiagonalUpRight' (board45 !! 10) player 10 0) ++
+				(movesDiagonalUpRight' (board45 !! 11) player 11 0) ++
+				(movesDiagonalUpRight' (board45 !! 12) player 12 0) ++
+				(movesDiagonalUpRight' (board45 !! 13) player 13 0) ++
+				(movesDiagonalUpRight' (board45 !! 14) player 14 0)
 				where board45 = clock45 board
 
-movesDiagonalUpRight'  :: [Cell] -> Player -> Int -> [(Int, Int)]
-movesDiagonalUpRight' [] _ _ = []
-movesDiagonalUpRight' [x] _ _ = []
-movesDiagonalUpRight' row player rowNum
+movesDiagonalUpRight'  :: [Cell] -> Player -> Int -> Int -> [(Int, Int)]
+movesDiagonalUpRight' [] _ _ _ = []
+movesDiagonalUpRight' [x] _ _ _ = []
+movesDiagonalUpRight' row player rowNum pos
 	| (valid && empty) == True = coord ++ next
 	| (valid && empty) == False = next
 	where valid = movesInLine (tail row) player
-	      coord = [rowNum, rowNum)]
-	      next = movesHorizontalRight' (tail row) player rowNum
+	      coord = [ clock45Coord (pos, rowNum) ]
+	      next = movesDiagonalUpRight' (tail row) player rowNum (pos+1)
 	      empty = cell2Char (head row) == '_'
-movesDiagonalUpRight' _ _ _ = []
+movesDiagonalUpRight' _ _ _ _ = []
 
 movesDiagonalUpLeft  :: Board -> Player -> [(Int, Int)]
 movesDiagonalUpLeft _ _ = []
@@ -198,6 +205,16 @@ dropLast :: [a] -> [a]
 --drops last element of list
 dropLast x = reverse (drop 1 (reverse x))
 
+clock45Coord :: (Int, Int) -> (Int, Int)
+-- | Get normal coord from clockwise 45 degree rotated board
+clock45Coord (x,y)
+		| (y <= 7) = (hiX, hiY)
+		| (y > 7) = (loX, loY)	
+		where hiX = x
+		      hiY = y-x
+		      loX = y + x - 7
+		      loY = 7 - x
+
 -- | Given a 'Cell', return the coorespoinding 'Player'.
 tile :: Player -> Cell
 tile Black = B
@@ -206,10 +223,38 @@ tile White = W
 	     --0  1  2  3  4  5  6  7
 demoBoard = [ [E, E, E, E, E, E, E, E],	--0
 	      [E, E, E, E, E, E, E, E], --1
-              [E, E, E, E, E, E, E, E],	--2
+              [E, E, E, E, E, W, E, E],	--2
               [E, E, E, W, B, E, E, E], --3
               [E, E, E, B, W, E, E, E], --4
-              [E, E, E, E, E, E, E, E], --5
+              [E, E, W, E, E, E, E, E], --5
               [E, E, E, E, E, E, E, E], --6
               [E, E, E, E, E, E, E, E] ]--7
 --Valid moves for B - (5,4) by HorzLeft, (4,5) by VertUp, (2,3) by HorzRight, (3,2) by VertDown
+--(1,6) by Diag Up Right  (6,1) by Diag Down Left
+
+-- TEMP --
+clock45 :: [[Cell]] -> [[Cell]]
+clock45 [ [a0, a1, a2, a3, a4, a5, a6, a7],
+   [b0, b1, b2, b3, b4, b5, b6, b7],
+   [c0, c1, c2, c3, c4, c5, c6, c7],
+   [d0, d1, d2, d3, d4, d5, d6, d7],
+   [e0, e1, e2, e3, e4, e5, e6, e7],
+   [f0, f1, f2, f3, f4, f5, f6, f7],
+   [g0, g1, g2, g3, g4, g5, g6, g7],
+   [h0, h1, h2, h3, h4, h5, h6, h7] ] =
+-- when implementing code, make sure to not have it based off size of board
+      [ [a0],
+   [b0, a1],
+   [c0, b1, a2],
+   [d0, c1, b2, a3],
+   [e0, d1, c2, b3, a4],
+   [f0, e1, d2, c3, b4, a5],
+   [g0, f1, e2, d3, c4, b5, a6],
+   [h0, g1, f2, e3, d4, c5, b6, a7],
+   [h1, g2, f3, e4, d5, c6, b7],
+   [h2, g3, f4, e5, d6, c7],
+   [h3, g4, f5, e6, d7],
+   [h4, g5, f6, e7],
+   [h5, g6, f7],
+   [h6, g7],
+   [h7] ]
