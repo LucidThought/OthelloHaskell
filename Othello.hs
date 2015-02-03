@@ -40,6 +40,7 @@ main' args = do
     putStrLn "The initial board rotated 90 degrees:"
     putBoard $ rotateClock $ theBoard initBoard
     
+
     putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
     let mv = reallyStupidStrategy (initBoard) B
        in case mv of
@@ -226,3 +227,31 @@ getCell xs n = xs !! n
 -- | Gets a cell from the board
 getCell2 :: [[Cell]] -> (Int,Int) -> Cell
 getCell2 xs (x,y) = getCell (xs !! y) x
+
+---AIs---------------------------------------------------------------------------
+
+-- | Takes gamestate and player colour and returns Maybe (int, int)
+-- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
+-- if nothing can be found it passes.
+-- By Riley Lahd
+corners :: Chooser
+corners gamestate cell
+		| (elem (0,0) validMoves) = Just (0,0)
+		| (elem (0,7) validMoves) = Just (0,7)
+		| (elem (7,0) validMoves) = Just (7,0)
+		| (elem (7,7) validMoves) = Just (7,7)
+		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
+		| ((length validMoves) > 0) = Just (validMoves !! 0)
+		| ((length validMoves) == 0) = Nothing
+		where validMoves = (moves (theBoard gamestate) (playerOf cell))
+		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
+
+
+safeZone :: [(Int, Int)] -> [(Int, Int)]
+safeZone [] = []
+safeZone (coord:left)
+		| ((x > 1) && (x < 6) && (y > 1) && (y < 6)) = [coord] ++ (safeZone left)
+		| True = (safeZone left)
+		where x = fst coord
+		      y = snd coord
+

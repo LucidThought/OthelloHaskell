@@ -335,6 +335,17 @@ demoBoard = [ [B, E, E, E, E, E, E, E],
               [E, E, E, E, E, E, W, E], 
               [E, E, E, E, E, E, E, B] ]
 
+demoState       :: GameState
+demoState       = GameState (Black, Init)
+            [ [B, E, E, E, E, E, E, E],	
+	      [E, W, E, E, E, E, E, E], 
+              [E, E, E, E, E, W, E, E],	
+              [E, E, E, W, B, E, E, E], 
+              [E, E, E, B, W, E, E, E], 
+              [E, E, W, E, E, E, E, E], 
+              [E, E, E, E, E, E, W, E], 
+              [E, E, E, E, E, E, E, B] ]
+
 -- TEMP --
 clock45 :: [[Cell]] -> [[Cell]]
 clock45 [ [a0, a1, a2, a3, a4, a5, a6, a7],
