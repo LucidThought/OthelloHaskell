@@ -6,6 +6,6 @@ This is an assignment in Haskell for a Programming Paradigms class at the Univer
 The collaborators are: <br>
 Anthony Coulthard <br>
 Riley Lahd <br>
-Andrew Lata <br>
+Andrew Lata (LucidThought)<br>
 Kendra Wannamaker <br>
 Andrew Howell <br>
