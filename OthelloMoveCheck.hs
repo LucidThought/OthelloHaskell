@@ -397,3 +397,81 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
       [f0, g1, h2],
       [g0, h1],
       [h0] ]
+
+
+-- | The following code is for flipping tiles, and currently does not work for some reason...
+
+flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
+flipThis board player (x,y) = (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x,y)) player (x,y))
+
+
+flipRightForward :: Board -> Player -> (Int, Int) -> Board
+flipRightForward board player (0,y) = if ((getCell2a board (0,y)) == E)
+					then board
+					else	if ((getCell2a board (0,y)) == tile player)
+						then (flipRightBackward board player (1,y))
+						else board
+flipRightForward board player (7,y) = board
+flipRightForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
+					then (flipRightForward board player (x-1,y))
+					else	if ((getCell2a board (x,y)) == tile player)
+						then (flipRightBackward board player (x+1,y))
+						else board
+
+flipRightBackward :: Board -> Player -> (Int, Int) -> Board
+flipRightBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
+					then (board)
+					else (flipRightBackward (replace2a board (x, y) (tile player)) player (x+1,y))
+
+flipLeftForward :: Board -> Player -> (Int, Int) -> Board
+flipLeftForward board player (7,y) = if ((getCell2a board (7,y)) == E)
+					then board
+					else	if ((getCell2a board (7,y)) == tile player)
+						then (flipLeftBackward board player (6,y))
+						else board
+flipLeftForward board player (0,y) = board
+flipLeftForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
+					then (flipLeftForward board player (x+1,y))
+					else if ((getCell2a board (x,y)) == tile player)
+						then (flipRightBackward board player (x-1,y))
+						else board
+
+flipLeftBackward :: Board -> Player -> (Int, Int) -> Board
+flipLeftBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
+					then (board)
+					else (flipLeftBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x-1,y))
+
+flipUpForward :: Board -> Player -> (Int, Int) -> Board
+flipUpForward board player (x,7) = if ((getCell2a board (x,7)) == E)
+					then board
+					else	if ((getCell2a board (x,7)) == tile player)
+						then (flipUpBackward board player (x,6))
+						else board
+flipUpForward board player (x,0) = board
+flipUpForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
+					then (flipUpForward board player (x,y+1))
+					else (flipUpBackward board player (x,y-1))
+
+flipUpBackward :: Board -> Player -> (Int, Int) -> Board
+flipUpBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
+					then (board)
+					else (flipUpBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y-1))
+
+
+-- | Replaces the nth element in a row with a new element.
+replacea         :: [a] -> Int -> a -> [a]
+replacea xs n elem = let (ys,zs) = splitAt n xs
+                    in  (if null zs then (if null ys then [] else init ys) else ys) ++ [elem] ++ (if null zs then [] else tail zs)
+
+-- | Replaces the (x,y)th element in a list of lists with a new element.
+replace2a        :: [[a]] -> (Int,Int) -> a -> [[a]]
+replace2a xs (x,y) elem = replacea xs y (replacea (xs !! y) x elem)
+
+-- | Gets a cell in a row of cells
+getCella :: [Cell] -> Int -> Cell
+getCella xs n = xs !! n
+
+-- | Gets a cell from the board
+getCell2a :: [[Cell]] -> (Int,Int) -> Cell
+getCell2a xs (x,y) = getCella (xs !! y) x
+
