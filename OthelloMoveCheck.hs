@@ -402,7 +402,13 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
 -- | The following code is for flipping tiles, and currently does not work for some reason...
 
 flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
-flipThis board player (j,i) = flipLeftForward ((flipRightForward (replace2a board (j,i) (tile player)) player (j+1,i))) player (j-1, i)
+flipThis board player (0,0) = flipLRightForward (replace2a board (0,0) (tile player)) player (1,0)
+flipThis board player (7,0) = flipLeftForward (replace2a board (7,0) (tile player)) player (6,0)
+flipThis board player (0,7) = flipRightForward (replace2a board (0,7) (tile player)) player (1,7)
+flipThis board player (7,7) = flipLeftForward (replace2a board (7,7) (tile player)) player (6,7)
+flipThis board player (7,y) = flipLeftForward (replace2a board (7,y) (tile player)) player (6,y)
+flipThis board player (0,y) = flipRightForward (replace2a board (0,y) (tile player)) player (1,y)
+flipThis board player (j,i) = (flipLeftForward (flipRightForward (replace2a board (j,i) (tile player)) player (j+1,i)) player (j-1, i))
 
 
 flipRightForward :: Board -> Player -> (Int, Int) -> Board
@@ -413,15 +419,15 @@ flipRightForward board player (0,y) = 	if ((getCell2a board (0,y)) == E)
 						else board
 flipRightForward board player (7,y) = board
 flipRightForward board player (x,y) = 	if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
-					then (flipRightForward board player (x-1,y))
+					then (flipRightForward board player (x+1,y))
 					else	if ((getCell2a board (x,y)) == tile player)
-						then (flipRightBackward board player (x+1,y))
+						then (flipRightBackward board player (x-1,y))
 						else board
 
 flipRightBackward :: Board -> Player -> (Int, Int) -> Board
 flipRightBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
-					else (flipRightBackward (replace2a board (x, y) (tile player)) player (x+1,y))
+					else (flipRightBackward (replace2a board (x, y) (tile player)) player (x-1,y))
 
 flipLeftForward :: Board -> Player -> (Int, Int) -> Board
 flipLeftForward board player (7,y) = if ((getCell2a board (7,y)) == E)
@@ -431,15 +437,15 @@ flipLeftForward board player (7,y) = if ((getCell2a board (7,y)) == E)
 						else board
 flipLeftForward board player (0,y) = board
 flipLeftForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
-					then (flipLeftForward board player (x+1,y))
+					then (flipLeftForward board player (x-1,y))
 					else if ((getCell2a board (x,y)) == tile player)
-						then (flipLeftBackward board player (x-1,y))
+						then (flipLeftBackward board player (x+1,y))
 						else board
 
 flipLeftBackward :: Board -> Player -> (Int, Int) -> Board
 flipLeftBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
-					else (flipLeftBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x-1,y))
+					else (flipLeftBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x+1,y))
 
 flipUpForward :: Board -> Player -> (Int, Int) -> Board
 flipUpForward board player (x,7) = if ((getCell2a board (x,7)) == E)
