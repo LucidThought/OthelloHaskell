@@ -330,8 +330,8 @@ demoBoard = [ [B, E, E, E, E, E, E, E],
 	      [E, W, E, E, E, B, E, E], 
               [E, E, E, E, E, W, E, E],	
               [E, W, W, W, B, W, W, E], 
-              [E, E, E, B, W, B, E, E], 
-              [E, E, W, E, B, E, E, E], 
+              [E, E, E, B, W, E, E, E], 
+              [E, E, W, E, E, E, E, E], 
               [E, E, E, E, E, E, W, E], 
               [E, E, E, E, E, E, E, B] ]
 
