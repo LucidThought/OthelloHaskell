@@ -327,11 +327,11 @@ tile White = W
 
 -- | A temporary board for testing accurate move outputs
 demoBoard = [ [B, E, E, E, E, E, E, E],	
-	      [E, W, E, E, E, E, E, E], 
+	      [E, W, E, E, E, B, E, E], 
               [E, E, E, E, E, W, E, E],	
               [E, W, W, W, B, W, W, E], 
-              [E, E, E, B, W, E, E, E], 
-              [E, E, W, E, E, E, E, E], 
+              [E, E, E, B, W, B, E, E], 
+              [E, E, W, E, B, E, E, E], 
               [E, E, E, E, E, E, W, E], 
               [E, E, E, E, E, E, E, B] ]
 
@@ -461,6 +461,22 @@ flipUpBackward :: Board -> Player -> (Int, Int) -> Board
 flipUpBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
 					else (flipUpBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y-1))
+
+flipDownForward :: Board -> Player -> (Int, Int) -> Board
+flipDownForward board player (x,0) = if ((getCell2a board (x,7)) == E)
+					then board
+					else	if ((getCell2a board (x,0)) == tile player)
+						then (flipDownBackward board player (x,1))
+						else board
+flipDownForward board player (x,7) = board
+flipDownForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
+					then (flipDownForward board player (x,y-1))
+					else (flipDownBackward board player (x,y+1))
+
+flipDownBackward :: Board -> Player -> (Int, Int) -> Board
+flipDownBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
+					then (board)
+					else (flipDownBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y+1))
 
 
 -- | Replaces the nth element in a row with a new element.
