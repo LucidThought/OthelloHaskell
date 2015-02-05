@@ -399,8 +399,7 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
       [h0] ]
 
 
--- | The following code is for flipping tiles, and currently does not work for some reason...
-
+-- | The following flip functions are meant to flip pieces after making a valid play
 flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
 flipThis board player (0,0) = flipRightForward (replace2a board (0,0) (tile player)) player (1,0)
 flipThis board player (7,0) = flipLeftForward (replace2a board (7,0) (tile player)) player (6,0)
