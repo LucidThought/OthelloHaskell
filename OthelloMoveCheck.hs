@@ -499,6 +499,7 @@ flipUpLeftForward board player (x,y) = if (getCell2a board (x,y) == (tile (inver
 						then (flipUpLeftBackward board player (x+1,y+1))
 						else board
 
+-- | flipUpLeftBackward flips pieces from the bordering piece found back to the played piece
 flipUpLeftBackward :: Board -> Player -> (Int,Int) -> Board
 flipUpLeftBackward board player (x,y) = if (getCell2a board (x,y) == (tile player))
 					then (board)
