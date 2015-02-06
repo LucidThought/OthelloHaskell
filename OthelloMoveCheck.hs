@@ -329,7 +329,7 @@ tile White = W
 demoBoard = [ [B, E, E, E, E, E, E, E],	
 	      [E, W, E, E, E, B, E, E], 
               [E, E, E, E, E, W, E, E],	
-              [E, W, W, W, B, W, W, E], 
+              [B, W, W, W, E, W, W, E], 
               [E, E, E, B, W, E, E, E], 
               [E, E, W, E, E, E, E, E], 
               [E, E, E, E, E, E, W, E], 
@@ -399,7 +399,7 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
       [h0] ]
 
 
--- | The following flip functions are meant to flip pieces after making a valid play
+-- | flipThis calls each directional flip to flip cells upon a valid play
 flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
 flipThis board player (0,0) = (flipDownForward (flipRightForward (replace2a board (0,0) (tile player)) player (1,0)) player (0,1))
 flipThis board player (7,0) = (flipDownForward (flipLeftForward (replace2a board (7,0) (tile player)) player (6,0)) player (7,1))
@@ -411,32 +411,33 @@ flipThis board player (7,y) = (flipDownForward (flipUpForward (flipLeftForward (
 flipThis board player (0,y) = (flipDownForward (flipUpForward (flipRightForward (replace2a board (0,y) (tile player)) player (1,y)) player (0,y-1)) player (0, y+1))
 flipThis board player (x,y) = (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1))
 
-
+-- | flip_Forward tests to see that there is a bordering piece on the other side of the played cell
 flipRightForward :: Board -> Player -> (Int, Int) -> Board
-flipRightForward board player (0,y) = 	if ((getCell2a board (0,y)) == E)
+flipRightForward board player (7,y) = 	if ((getCell2a board (7,y)) == E)
 					then board
-					else	if ((getCell2a board (0,y)) == tile player)
-						then (flipRightBackward board player (1,y))
+					else	if ((getCell2a board (7,y)) == tile player)
+						then (flipRightBackward board player (6,y))
 						else board
-flipRightForward board player (7,y) = board
+flipRightForward board player (0,y) = board
 flipRightForward board player (x,y) = 	if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
 					then (flipRightForward board player (x+1,y))
 					else	if ((getCell2a board (x,y)) == tile player)
 						then (flipRightBackward board player (x-1,y))
 						else board
 
+-- | flip_Backward changes the appropriate cells along a line from the discovered bordering piece to the original cell
 flipRightBackward :: Board -> Player -> (Int, Int) -> Board
 flipRightBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
 					else (flipRightBackward (replace2a board (x, y) (tile player)) player (x-1,y))
 
 flipLeftForward :: Board -> Player -> (Int, Int) -> Board
-flipLeftForward board player (7,y) = if ((getCell2a board (7,y)) == E)
+flipLeftForward board player (0,y) = if ((getCell2a board (0,y)) == E)
 					then board
-					else	if ((getCell2a board (7,y)) == tile player)
-						then (flipLeftBackward board player (6,y))
+					else	if ((getCell2a board (0,y)) == tile player)
+						then (flipLeftBackward board player (1,y))
 						else board
-flipLeftForward board player (0,y) = board
+flipLeftForward board player (7,y) = board
 flipLeftForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
 					then (flipLeftForward board player (x-1,y))
 					else if ((getCell2a board (x,y)) == tile player)
