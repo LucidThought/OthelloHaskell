@@ -464,7 +464,7 @@ flipUpLeftForward board player (x,y) = if (getCell2 board (x,y) == (tile (invert
 					then (flipUpLeftForward board player (x-1,y-1))
 					else 	if ((getCell2 board (x,y)) == tile player)
 						then (flipUpLeftBackward board player (x+1,y+1))
-						else board
+						else board-}
 
 
 ---AIs---------------------------------------------------------------------------
