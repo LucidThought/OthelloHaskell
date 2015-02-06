@@ -407,9 +407,9 @@ flipThis board player (0,7) = (flipUpForward (flipRightForward (replace2a board 
 flipThis board player (7,7) = (flipUpForward (flipLeftForward (replace2a board (7,7) (tile player)) player (6,7)) player (7,6))
 flipThis board player (x,0) = (flipDownForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,1))
 flipThis board player (x,7) = (flipUpForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,6))
-flipThis board player (7,y) = (flipDownForward (flipUpForward (flipLeftForward (replace2a board (7,y) (tile player)) player (6,y)) player (7,y-1)) player (7, y+1))
+flipThis board player (7,y) = (flipDownForward (flipUpForward (flipLeftForward (replace2a board (7,y) (tile player)) player (6,y)) player (7,y-1)) player (7, y+1)
 flipThis board player (0,y) = (flipDownForward (flipUpForward (flipRightForward (replace2a board (0,y) (tile player)) player (1,y)) player (0,y-1)) player (0, y+1))
-flipThis board player (x,y) = (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1))
+flipThis board player (x,y) = (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1)) player (x-1,y-1))
 
 -- | flip_Forward tests to see that there is a bordering piece on the other side of the played cell (checking rightmost cells from the played cell)
 flipRightForward :: Board -> Player -> (Int, Int) -> Board
@@ -459,9 +459,11 @@ flipUpForward board player (x,7) = if ((getCell2a board (x,7)) == E)
 						then (flipUpBackward board player (x,6))
 						else board
 flipUpForward board player (x,0) = board
-flipUpForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
+flipUpForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player)))
 					then (flipUpForward board player (x,y-1))
-					else (flipUpBackward board player (x,y+1))
+					else if (getCell2a board (x,y)) == (tile player)
+						then (flipUpBackward board player (x,y+1))
+						else board
 
 -- | flip_Backward changes the appropriate cells along a line from the discovered bordering piece to the original cell (flipping cells above the played cell)
 flipUpBackward :: Board -> Player -> (Int, Int) -> Board
@@ -477,15 +479,30 @@ flipDownForward board player (x,0) = if ((getCell2a board (x,0)) == E)
 						then (flipDownBackward board player (x,1))
 						else board
 flipDownForward board player (x,7) = board
-flipDownForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
+flipDownForward board player (x,y) = if ((getCell2a board (x,y)) == (tile (invertPlayer player))) 
 					then (flipDownForward board player (x,y+1))
-					else (flipDownBackward board player (x,y-1))
+					else if (getCell2a board (x,y)) == (tile player)
+						then (flipDownBackward board player (x,y-1))
+						else board
 
 -- | flip_Backward changes the appropriate cells along a line from the discovered bordering piece to the original cell (flipping cells below the played cell)
 flipDownBackward :: Board -> Player -> (Int, Int) -> Board
 flipDownBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
 					else (flipDownBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y-1))
+
+-- | flipUpLeftForward tests cells in a diagonal to the left and upwards for a bordering piece
+flipUpLeftForward :: Board -> Player -> (Int,Int) -> Board
+flipUpLeftForward board player (x,y) = if (getCell2a board (x,y) == (tile (invertPlayer player)))
+					then (flipUpLeftForward board player (x-1,y-1))
+					else 	if ((getCell2a board (x,y)) == tile player)
+						then (flipUpLeftBackward board player (x+1,y+1))
+						else board
+
+flipUpLeftBackward :: Board -> Player -> (Int,Int) -> Board
+flipUpLeftBackward board player (x,y) = if (getCell2a board (x,y) == (tile player))
+					then (board)
+					else (flipUpLeftBackward (replace2a board (x,y) (otherCell (getCell2a board (x,y)))) player (x+1,y+1))
 
 
 -- | Replaces the nth element in a row with a new element.
