@@ -454,13 +454,13 @@ flipUpForward board player (x,7) = if ((getCell2a board (x,7)) == E)
 						else board
 flipUpForward board player (x,0) = board
 flipUpForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
-					then (flipUpForward board player (x,y+1))
-					else (flipUpBackward board player (x,y-1))
+					then (flipUpForward board player (x,y-1))
+					else (flipUpBackward board player (x,y+1))
 
 flipUpBackward :: Board -> Player -> (Int, Int) -> Board
 flipUpBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
-					else (flipUpBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y-1))
+					else (flipUpBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y+1))
 
 flipDownForward :: Board -> Player -> (Int, Int) -> Board
 flipDownForward board player (x,0) = if ((getCell2a board (x,7)) == E)
@@ -470,13 +470,13 @@ flipDownForward board player (x,0) = if ((getCell2a board (x,7)) == E)
 						else board
 flipDownForward board player (x,7) = board
 flipDownForward board player (x,y) = if ((getCell2a board (x,y)) /= tile player) 
-					then (flipDownForward board player (x,y-1))
-					else (flipDownBackward board player (x,y+1))
+					then (flipDownForward board player (x,y+1))
+					else (flipDownBackward board player (x,y-1))
 
 flipDownBackward :: Board -> Player -> (Int, Int) -> Board
 flipDownBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player))
 					then (board)
-					else (flipDownBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y+1))
+					else (flipDownBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y-1))
 
 
 -- | Replaces the nth element in a row with a new element.
