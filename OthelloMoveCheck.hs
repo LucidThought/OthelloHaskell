@@ -327,7 +327,7 @@ tile White = W
 
 -- | A temporary board for testing accurate move outputs
 demoBoard = [ [B, E, E, E, E, E, E, E],	
-	      [E, W, B, B, B, B, B, E], 
+	      [E, W, B, B, E, B, B, E], 
               [E, E, B, W, W, W, B, E],	
               [B, W, B, W, E, W, B, E], 
               [E, E, B, W, W, W, B, E], 
