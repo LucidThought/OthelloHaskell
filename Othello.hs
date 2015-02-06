@@ -2,7 +2,7 @@ import Debug.Trace
 import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
 import System.Random
-import Data.List ((\\))
+import Data.List ((\\), nub)
 import System.Environment
 import System.IO.Unsafe
 import Data.Either
@@ -207,8 +207,27 @@ type PointRotation = (Int,Int) -> (Int,Int)
 -- | rotate 90 degrees clockwise.
 rotatePt             :: PointRotation
 rotatePt             (x,y) = (7-y, x)   
-               
----2D list utility functions-------------------------------------------------------
+
+-- | Auxilliary Functions -----------------------------------------------
+demoBoard = [ [B, E, E, E, E, E, E, E],	
+	      [E, W, B, B, E, B, B, E], 
+              [E, E, B, W, W, W, B, E],	
+              [B, W, B, W, E, W, B, E], 
+              [E, E, B, W, W, W, B, E], 
+              [E, E, B, B, B, B, B, E], 
+              [E, E, E, E, E, E, W, E], 
+              [E, E, E, E, E, E, E, B] ]
+
+demoState       :: GameState
+demoState       = GameState (Black, Init)
+            [ [B, E, E, E, E, E, E, E],	
+	      [E, W, E, E, E, E, E, E], 
+              [E, E, E, E, E, W, E, E],	
+              [E, E, E, W, B, E, E, E], 
+              [E, E, E, B, W, E, E, E], 
+              [E, E, W, E, E, E, E, E], 
+              [E, E, E, E, E, E, W, E], 
+              [E, E, E, E, E, E, E, B] ]
 
 -- | Replaces the nth element in a row with a new element.
 replace         :: [a] -> Int -> a -> [a]
@@ -226,6 +245,62 @@ getCell xs n = xs !! n
 -- | Gets a cell from the board
 getCell2 :: [[Cell]] -> (Int,Int) -> Cell
 getCell2 xs (x,y) = getCell (xs !! y) x
+
+-- | Drops last element of list
+dropLast :: [a] -> [a]
+dropLast x = reverse (drop 1 (reverse x))
+
+-- | Get normal coordinates from clockwise 45 degree rotated coordinates
+clock45Coord :: (Int, Int) -> (Int, Int)
+clock45Coord (x,y)
+		| (y <= 7) = (hiX, hiY)
+		| (y > 7) = (loX, loY)	
+		where hiX = x
+		      hiY = y-x
+		      loX = y + x - 7
+		      loY = 7 - x
+
+-- | Get normal coordinates from counter clockwise 45 degree rotated coordinates
+counter45Coord :: (Int, Int) -> (Int, Int)
+counter45Coord (x,y)
+		| (y <= 7) = (hiX, hiY)
+		| (y > 7) = (loX, loY)	
+		where hiX = (7-y) + x
+		      hiY = x
+		      loX = x
+		      loY = (y-7) + x
+
+-- | Given a 'Player', return the coorespoinding 'Cell' colour for comparisons
+tile :: Player -> Cell
+tile Black = B
+tile White = W
+
+---AIs---------------------------------------------------------------------------
+
+-- | Takes gamestate and player colour and returns Maybe (int, int)
+-- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
+-- if nothing can be found it passes.
+-- By Riley Lahd
+corners :: Chooser
+corners gamestate cell
+		| (elem (0,0) validMoves) = Just (0,0)
+		| (elem (0,7) validMoves) = Just (0,7)
+		| (elem (7,0) validMoves) = Just (7,0)
+		| (elem (7,7) validMoves) = Just (7,7)
+		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
+		| ((length validMoves) > 0) = Just (validMoves !! 0)
+		| ((length validMoves) == 0) = Nothing
+		where validMoves = (moves (theBoard gamestate) (playerOf cell))
+		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
+
+
+safeZone :: [(Int, Int)] -> [(Int, Int)]
+safeZone [] = []
+safeZone (coord:left)
+		| ((x > 1) && (x < 6) && (y > 1) && (y < 6)) = [coord] ++ (safeZone left)
+		| True = (safeZone left)
+		where x = fst coord
+		      y = snd coord
 
 -- | FLIPPING FUNCTIONS -----
 
@@ -465,31 +540,285 @@ flipUpLeftForward board player (x,y) = if (getCell2 board (x,y) == (tile (invert
 						then (flipUpLeftBackward board player (x+1,y+1))
 						else board-}
 
+-- | Move Checking section ---------------------------------
 
----AIs---------------------------------------------------------------------------
+moves :: Board -> Player -> [(Int, Int)]
+-- ^take board and player
+-- find all valid moves for this player, return in array as coords
+moves board player = nub ((movesDiagonal board player) ++ (movesVertical board player) ++ (movesHorizontal board player))
 
--- | Takes gamestate and player colour and returns Maybe (int, int)
--- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
--- if nothing can be found it passes.
--- By Riley Lahd
-corners :: Chooser
-corners gamestate cell
-		| (elem (0,0) validMoves) = Just (0,0)
-		| (elem (0,7) validMoves) = Just (0,7)
-		| (elem (7,0) validMoves) = Just (7,0)
-		| (elem (7,7) validMoves) = Just (7,7)
-		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
-		| ((length validMoves) > 0) = Just (validMoves !! 0)
-		| ((length validMoves) == 0) = Nothing
-		where validMoves = (moves (theBoard gamestate) (playerOf cell))
-		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
+movesDiagonal :: Board -> Player -> [(Int, Int)]
+-- ^Divide diagonal into clockwise right and left and counter right and left
+movesDiagonal board player = (movesDiagonalClockwiseLeft board player) ++ (movesDiagonalCounterRight board player) ++ (movesDiagonalCounterLeft board player) ++ (movesDiagonalClockwiseRight board player)
+
+movesVertical  :: Board -> Player -> [(Int, Int)]
+-- ^Divide vertival into upwards and downwards
+movesVertical board player = (movesVerticalDown board player) ++ (movesVerticalUp board player)
+
+movesHorizontal  :: Board -> Player -> [(Int, Int)]
+-- ^Divide horizontal into left and right
+movesHorizontal board player = (movesHorizontalLeft board player) ++ (movesHorizontalRight board player)
+
+-- | Compiles a list of valid moves to the left
+movesHorizontalLeft  :: [[Cell]] -> Player -> [(Int, Int)]
+movesHorizontalLeft board player = (movesHorizontalLeft' (board !! 0) player 0) ++
+				(movesHorizontalLeft' (board !! 1) player 1) ++
+				(movesHorizontalLeft' (board !! 2) player 2) ++
+				(movesHorizontalLeft' (board !! 3) player 3) ++
+				(movesHorizontalLeft' (board !! 4) player 4) ++
+				(movesHorizontalLeft' (board !! 5) player 5) ++
+				(movesHorizontalLeft' (board !! 6) player 6) ++
+				(movesHorizontalLeft' (board !! 7) player 7)
+
+-- | Compiles a list of valid moves on a single row looking leftwards
+movesHorizontalLeft' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesHorizontalLeft' [] _ _ = []
+movesHorizontalLeft' [x] _ _ = []
+movesHorizontalLeft' row player rowNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail (reverse row)) player
+	      coord = [((length row)-1, rowNum)]
+	      next = movesHorizontalLeft' (dropLast row) player rowNum
+	      empty = cell2Char (head (reverse row)) == '_'
+movesHorizontalLeft' _ _ _ = [(10,10)]
+
+-- | Compiles a list of valid moves to the right
+movesHorizontalRight  :: Board -> Player -> [(Int, Int)]
+movesHorizontalRight board player = (movesHorizontalRight' (board !! 0) player 0) ++
+				(movesHorizontalRight' (board !! 1) player 1) ++
+				(movesHorizontalRight' (board !! 2) player 2) ++
+				(movesHorizontalRight' (board !! 3) player 3) ++
+				(movesHorizontalRight' (board !! 4) player 4) ++
+				(movesHorizontalRight' (board !! 5) player 5) ++
+				(movesHorizontalRight' (board !! 6) player 6) ++
+				(movesHorizontalRight' (board !! 7) player 7)
+
+-- | Compiles a list of valid moves in a single row looking rightwards
+movesHorizontalRight' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesHorizontalRight' [] _ _ = []
+movesHorizontalRight' [x] _ _ = []
+movesHorizontalRight' row player rowNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail row) player
+	      coord = [(8-(length row), rowNum)]
+	      next = movesHorizontalRight' (tail row) player rowNum
+	      empty = cell2Char (head row) == '_'
+movesHorizontalRight' _ _ _ = []
+
+-- | Compiles a list of valid moves looking up
+movesVerticalUp  :: Board -> Player -> [(Int, Int)]
+movesVerticalUp board player = (movesVerticalUp' (map (!! 0) board) player 0) ++
+				(movesVerticalUp' (map (!! 1) board) player 1) ++
+				(movesVerticalUp' (map (!! 2) board) player 2) ++
+				(movesVerticalUp' (map (!! 3) board) player 3) ++
+				(movesVerticalUp' (map (!! 4) board) player 4) ++
+				(movesVerticalUp' (map (!! 5) board) player 5) ++
+				(movesVerticalUp' (map (!! 6) board) player 6) ++
+				(movesVerticalUp' (map (!! 7) board) player 7)
+
+-- | Compiles a list of valid moves in a single column looking upwards
+movesVerticalUp' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesVerticalUp' [] _ _ = []
+movesVerticalUp' [x] _ _ = []
+movesVerticalUp' column player columnNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail (reverse column)) player
+	      coord = [(columnNum, (length column)-1)]
+	      next = movesVerticalUp' (dropLast column) player columnNum
+	      empty = cell2Char (head column) == '_'
+movesVerticalUp' _ _ _ = []
+
+-- | Compiles a list of valid moves looking down
+movesVerticalDown  :: Board -> Player -> [(Int, Int)]
+movesVerticalDown board player =(movesVerticalDown' (map (!! 0) board) player 0) ++
+				(movesVerticalDown' (map (!! 1) board) player 1) ++
+				(movesVerticalDown' (map (!! 2) board) player 2) ++
+				(movesVerticalDown' (map (!! 3) board) player 3) ++
+				(movesVerticalDown' (map (!! 4) board) player 4) ++
+				(movesVerticalDown' (map (!! 5) board) player 5) ++
+				(movesVerticalDown' (map (!! 6) board) player 6) ++
+				(movesVerticalDown' (map (!! 7) board) player 7)
+
+-- | Compiles a list of valid moves in a single column looking downwards
+movesVerticalDown' :: [Cell] -> Player -> Int -> [(Int, Int)]
+movesVerticalDown' [] _ _ = []
+movesVerticalDown' [x] _ _ = []
+movesVerticalDown' column player columnNum
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail column) player
+	      coord = [(columnNum,8-(length column))]
+	      next = movesVerticalDown' (tail column) player columnNum
+	      empty = cell2Char (head column) == '_'
+movesVerticalDown' _ _ _ = []
+
+-- | Compiles a list of valid moves looking up and right
+movesDiagonalClockwiseRight  :: Board -> Player -> [(Int, Int)]
+movesDiagonalClockwiseRight board player =(movesDiagonalClockwiseRight' (board45 !! 0) player 0 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 1) player 1 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 2) player 2 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 3) player 3 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 4) player 4 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 5) player 5 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 6) player 6 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 7) player 7 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 8) player 8 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 9) player 9 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 10) player 10 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 11) player 11 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 12) player 12 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 13) player 13 0) ++
+				(movesDiagonalClockwiseRight' (board45 !! 14) player 14 0)
+				where board45 = clock45 board
+
+-- | Compiles a list of valid moves in a single diagonal looking up-rightwards
+movesDiagonalClockwiseRight'  :: [Cell] -> Player -> Int -> Int -> [(Int, Int)]
+movesDiagonalClockwiseRight' [] _ _ _ = []
+movesDiagonalClockwiseRight' [x] _ _ _ = []
+movesDiagonalClockwiseRight' row player rowNum pos
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail row) player
+	      coord = [ clock45Coord (pos, rowNum) ]
+	      next = movesDiagonalClockwiseRight' (tail row) player rowNum (pos+1)
+	      empty = cell2Char (head row) == '_'
+movesDiagonalClockwiseRight' _ _ _ _ = []
+
+-- | Compiles a list of valid moves looking down and left
+movesDiagonalClockwiseLeft  :: Board -> Player -> [(Int, Int)]
+movesDiagonalClockwiseLeft board player =(movesDiagonalClockwiseLeft' (board45 !! 0) player 0 0) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 1) player 1 1) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 2) player 2 2) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 3) player 3 3) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 4) player 4 4) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 5) player 5 5) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 6) player 6 6) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 7) player 7 7) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 8) player 8 6) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 9) player 9 5) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 10) player 10 4) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 11) player 11 3) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 12) player 12 2) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 13) player 13 1) ++
+				(movesDiagonalClockwiseLeft' (board45 !! 14) player 14 0)
+				where board45 = clock45 board
+
+-- | Compiles a list of valid moves in a single diagonal looking down-leftwards
+movesDiagonalClockwiseLeft'  :: [Cell] -> Player -> Int -> Int -> [(Int, Int)]
+movesDiagonalClockwiseLeft' [] _ _ _ = []
+movesDiagonalClockwiseLeft' [x] _ _ _ = []
+movesDiagonalClockwiseLeft' row player rowNum pos
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (reverse (dropLast row)) player
+	      coord = [ clock45Coord (pos, rowNum) ]
+	      next = movesDiagonalClockwiseLeft' (dropLast row) player rowNum (pos-1)
+	      empty = cell2Char  (row !! pos) == '_'
+movesDiagonalClockwiseLeft' _ _ _ _ = []
+
+-- | Compiles a list of valid moves looking up and left
+movesDiagonalCounterLeft  :: Board -> Player -> [(Int, Int)]
+movesDiagonalCounterLeft board player =(movesDiagonalCounterLeft' (board45 !! 0) player 0 0) ++
+				(movesDiagonalCounterLeft' (board45 !! 1) player 1 1) ++
+				(movesDiagonalCounterLeft' (board45 !! 2) player 2 2) ++
+				(movesDiagonalCounterLeft' (board45 !! 3) player 3 3) ++
+				(movesDiagonalCounterLeft' (board45 !! 4) player 4 4) ++
+				(movesDiagonalCounterLeft' (board45 !! 5) player 5 5) ++
+				(movesDiagonalCounterLeft' (board45 !! 6) player 6 6) ++
+				(movesDiagonalCounterLeft' (board45 !! 7) player 7 7) ++
+				(movesDiagonalCounterLeft' (board45 !! 8) player 8 6) ++
+				(movesDiagonalCounterLeft' (board45 !! 9) player 9 5) ++
+				(movesDiagonalCounterLeft' (board45 !! 10) player 10 4) ++
+				(movesDiagonalCounterLeft' (board45 !! 11) player 11 3) ++
+				(movesDiagonalCounterLeft' (board45 !! 12) player 12 2) ++
+				(movesDiagonalCounterLeft' (board45 !! 13) player 13 1) ++
+				(movesDiagonalCounterLeft' (board45 !! 14) player 14 0)
+				where board45 = counter45 board
+
+-- | Compiles a list of valid moves in a single diagonal looking up-leftwards
+movesDiagonalCounterLeft'  :: [Cell] -> Player -> Int -> Int -> [(Int, Int)]
+movesDiagonalCounterLeft' [] _ _ _ = []
+movesDiagonalCounterLeft' [x] _ _ _ = []
+movesDiagonalCounterLeft' row player rowNum pos
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (reverse (dropLast row)) player
+	      coord = [ counter45Coord (pos, rowNum) ]
+	      next = movesDiagonalCounterLeft' (dropLast row) player rowNum (pos-1)
+	      empty = cell2Char  (row !! pos) == '_'
+movesDiagonalCounterLeft' _ _ _ _ = []
+
+-- | Compiles a list of valid moves looking down and right
+movesDiagonalCounterRight  :: Board -> Player -> [(Int, Int)]
+movesDiagonalCounterRight board player =(movesDiagonalCounterRight' (board45 !! 0) player 0 0) ++
+				(movesDiagonalCounterRight' (board45 !! 1) player 1 0) ++
+				(movesDiagonalCounterRight' (board45 !! 2) player 2 0) ++
+				(movesDiagonalCounterRight' (board45 !! 3) player 3 0) ++
+				(movesDiagonalCounterRight' (board45 !! 4) player 4 0) ++
+				(movesDiagonalCounterRight' (board45 !! 5) player 5 0) ++
+				(movesDiagonalCounterRight' (board45 !! 6) player 6 0) ++
+				(movesDiagonalCounterRight' (board45 !! 7) player 7 0) ++
+				(movesDiagonalCounterRight' (board45 !! 8) player 8 0) ++
+				(movesDiagonalCounterRight' (board45 !! 9) player 9 0) ++
+				(movesDiagonalCounterRight' (board45 !! 10) player 10 0) ++
+				(movesDiagonalCounterRight' (board45 !! 11) player 11 0) ++
+				(movesDiagonalCounterRight' (board45 !! 12) player 12 0) ++
+				(movesDiagonalCounterRight' (board45 !! 13) player 13 0) ++
+				(movesDiagonalCounterRight' (board45 !! 14) player 14 0)
+				where board45 = counter45 board
+
+-- | Compiles a list of valid moves in a single diagonal looking down-rightwards
+movesDiagonalCounterRight'  :: [Cell] -> Player -> Int -> Int -> [(Int, Int)]
+movesDiagonalCounterRight' [] _ _ _ = []
+movesDiagonalCounterRight' [x] _ _ _ = []
+movesDiagonalCounterRight' row player rowNum pos
+	| (valid && empty) == True = coord ++ next
+	| (valid && empty) == False = next
+	where valid = movesInLine (tail row) player
+	      coord = [ counter45Coord (pos, rowNum) ]
+	      next = movesDiagonalCounterRight' (tail row) player rowNum (pos+1)
+	      empty = cell2Char (head row) == '_'
+movesDiagonalCounterRight' _ _ _ _ = []
 
 
-safeZone :: [(Int, Int)] -> [(Int, Int)]
-safeZone [] = []
-safeZone (coord:left)
-		| ((x > 1) && (x < 6) && (y > 1) && (y < 6)) = [coord] ++ (safeZone left)
-		| True = (safeZone left)
-		where x = fst coord
-		      y = snd coord
+-- | Given a "path" looking from a space to place a tile, check that this move 
+--   would flip at least one enemy tile
+movesInLine :: [Cell] -> Player -> Bool
+-- ^Assumes that tile will be placed in -1
+--i.e. give this the path from placed tile to edge of board, excluding the tile
+movesInLine line player
+	|hasAlly line player == True = allEnemy (frame line player) player
+	|hasAlly line player == False = False
+
+-- | Check if a grouping of cells is a line of enemy tiles
+allEnemy :: [Cell] -> Player -> Bool
+allEnemy [] _ = False
+allEnemy [x] player
+	| x == tile (invertPlayer player) = True
+allEnemy (x:xs) player
+	| x == tile (invertPlayer player) = allEnemy xs player
+allEnemy _ _ = False
+
+-- | Checks if a row contains at least one other allied tile to pair with
+hasAlly :: [Cell] -> Player -> Bool
+hasAlly [] _= False
+hasAlly [x] player
+	| x == tile player = True
+hasAlly (x:xs) player
+	| x == tile player = True
+	| x /= tile player = hasAlly xs player
+hasAlly _ _ = False
+
+-- | Remove any spaces after the closest allied tile
+frame :: [Cell] -> Player -> [Cell]
+--Assumes that the tile will be placed in spot -1
+--finds first ally in row and drops it and anything after
+--Leaving the space between ally and proposed placement
+frame [] _= []
+frame (x:xs) player
+	| x == tile player = []
+	| x /= tile player = [x] ++ frame xs player
 
