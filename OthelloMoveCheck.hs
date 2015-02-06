@@ -463,7 +463,7 @@ flipUpBackward board player (x, y) = if (getCell2a board (x,y)  == (tile player)
 					else (flipUpBackward (replace2a board (x, y) (otherCell (getCell2a board (x,y)))) player (x,y+1))
 
 flipDownForward :: Board -> Player -> (Int, Int) -> Board
-flipDownForward board player (x,0) = if ((getCell2a board (x,7)) == E)
+flipDownForward board player (x,0) = if ((getCell2a board (x,0)) == E)
 					then board
 					else	if ((getCell2a board (x,0)) == tile player)
 						then (flipDownBackward board player (x,1))
