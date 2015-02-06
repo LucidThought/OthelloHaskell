@@ -327,11 +327,11 @@ tile White = W
 
 -- | A temporary board for testing accurate move outputs
 demoBoard = [ [B, E, E, E, E, E, E, E],	
-	      [E, W, E, E, E, B, E, E], 
-              [E, E, B, E, E, W, E, E],	
-              [B, W, W, W, E, W, W, E], 
-              [E, E, E, B, W, E, E, E], 
-              [E, E, W, E, E, B, E, E], 
+	      [E, W, B, B, B, B, B, E], 
+              [E, E, B, W, W, W, B, E],	
+              [B, W, B, W, E, W, B, E], 
+              [E, E, B, W, W, W, B, E], 
+              [E, E, B, B, B, B, B, E], 
               [E, E, E, E, E, E, W, E], 
               [E, E, E, E, E, E, E, B] ]
 
@@ -401,15 +401,15 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
 
 -- | flipThis calls each directional flip to flip cells upon a valid play
 flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
-flipThis board player (0,0) = (flipDownForward (flipRightForward (replace2a board (0,0) (tile player)) player (1,0)) player (0,1))
-flipThis board player (7,0) = (flipDownForward (flipLeftForward (replace2a board (7,0) (tile player)) player (6,0)) player (7,1))
-flipThis board player (0,7) = (flipUpForward (flipRightForward (replace2a board (0,7) (tile player)) player (1,7)) player (0,6))
-flipThis board player (7,7) = (flipUpForward (flipLeftForward (replace2a board (7,7) (tile player)) player (6,7)) player (7,6))
-flipThis board player (x,0) = (flipDownForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,1))
-flipThis board player (x,7) = (flipUpForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,6))
-flipThis board player (7,y) = (flipDownForward (flipUpForward (flipLeftForward (replace2a board (7,y) (tile player)) player (6,y)) player (7,y-1)) player (7, y+1))
-flipThis board player (0,y) = (flipDownForward (flipUpForward (flipRightForward (replace2a board (0,y) (tile player)) player (1,y)) player (0,y-1)) player (0, y+1))
-flipThis board player (x,y) = (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1)) player (x-1,y-1))
+flipThis board player (0,0) = (flipDownRightForward (flipDownForward (flipRightForward (replace2a board (0,0) (tile player)) player (1,0)) player (0,1)) player (1,1))
+flipThis board player (7,0) = (flipDownLeftForward (flipDownForward (flipLeftForward (replace2a board (7,0) (tile player)) player (6,0)) player (7,1)) player (6,1))
+flipThis board player (0,7) = (flipUpRightForward (flipUpForward (flipRightForward (replace2a board (0,7) (tile player)) player (1,7)) player (0,6)) player (1,6))
+flipThis board player (7,7) = (flipUpLeftForward (flipUpForward (flipLeftForward (replace2a board (7,7) (tile player)) player (6,7)) player (7,6)) player (6,6))
+flipThis board player (x,0) = (flipDownRightForward (flipDownLeftForward (flipDownForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,1)) player (x-1,1)) player (x+1,1))
+flipThis board player (x,7) = (flipUpRightForward (flipUpLeftForward (flipUpForward (flipRightForward (flipLeftForward (replace2a board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,6)) player (x-1,6)) player (x+1,6))
+flipThis board player (7,y) = (flipDownLeftForward (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (replace2a board (7,y) (tile player)) player (6,y)) player (7,y-1)) player (7, y+1)) player (6,y-1)) player (6,y+1))
+flipThis board player (0,y) = (flipDownRightForward (flipUpRightForward (flipDownForward (flipUpForward (flipRightForward (replace2a board (0,y) (tile player)) player (1,y)) player (0,y-1)) player (0, y+1)) player (1,y-1)) player (1,y+1))
+flipThis board player (x,y) = (flipDownRightForward (flipUpRightForward (flipDownLeftForward (flipUpLeftForward (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2a board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1)) player (x-1,y-1)) player (x-1,y-1)) player (x-1,y+1)) player (x+1,y-1)) player (x+1,y+1))
 
 -- | flip_Forward tests to see that there is a bordering piece on the other side of the played cell (checking rightmost cells from the played cell)
 flipRightForward :: Board -> Player -> (Int, Int) -> Board
