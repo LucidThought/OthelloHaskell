@@ -275,6 +275,19 @@ tile :: Player -> Cell
 tile Black = B
 tile White = W
 
+-- | countTiles takes a board, then passes some initial conditions along with an array of all board cells to the curried function countTiles'
+countTiles :: [[Cell]] -> (Int, Int)
+countTiles board = countTiles' Black 0 0 (concat board)
+
+-- | countTiles' takes an array of all cells on a board and returns a tuple with the number of black tiles on the board, then the number of white tiles on the board
+countTiles' :: Player -> Int -> Int -> [Cell] -> (Int, Int)
+countTiles' player p p' [] = (p, p')
+countTiles' player p p' (x:xs) = if x == tile player
+				then countTiles' player (p+1) p' xs
+				else 	if x == tile (invertPlayer player)
+					then countTiles' player p (p'+1) xs
+					else countTiles' player p p' xs 
+
 ---AIs---------------------------------------------------------------------------
 
 -- | Takes gamestate and player colour and returns Maybe (int, int)
