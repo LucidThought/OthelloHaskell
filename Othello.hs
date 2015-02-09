@@ -221,11 +221,11 @@ demoBoard = [ [B, E, E, E, E, E, E, E],
 demoState       :: GameState
 demoState       = GameState (Black, Init)
             [ [B, E, E, E, E, E, E, E],	
-	      [E, W, E, E, E, E, E, E], 
-              [E, E, E, E, E, W, E, E],	
-              [E, E, E, W, B, E, E, E], 
-              [E, E, E, B, W, E, E, E], 
-              [E, E, W, E, E, E, E, E], 
+	      [E, W, B, B, E, B, B, E], 
+              [E, E, B, W, W, W, B, E],	
+              [B, W, B, W, E, W, B, E], 
+              [E, E, B, W, W, W, B, E], 
+              [E, E, B, B, B, B, B, E], 
               [E, E, E, E, E, E, W, E], 
               [E, E, E, E, E, E, E, B] ]
 
