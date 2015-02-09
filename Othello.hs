@@ -280,7 +280,7 @@ tile White = W
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
 -- if nothing can be found it passes.
--- By Riley Lahd
+-- By Riley Lahd u r a b
 corners :: Chooser
 corners gamestate cell
 		| (elem (0,0) validMoves) = Just (0,0)
