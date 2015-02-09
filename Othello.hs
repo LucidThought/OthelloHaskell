@@ -25,7 +25,29 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = main' (unsafePerformIO getArgs)
+main = playGame (corners, corners) initBoard --main' (unsafePerformIO getArgs)
+
+-- | to show the board each time it must look similar to this
+{- | playGame :: type1 -> type2 -> type3 -> IO()
+playGame type1 type2 type3 = do
+		putStrLn (show board) or gamestate
+		<insert game logic here>
+		playGame switchtypes
+
+		takes tuples of (AI, Player) first one being the one about to play and the second being the one that just played
+		
+-}
+
+playGame :: (Chooser, Chooser) -> GameState -> Gamestate
+playGame (one, two) gamestate
+				| ((blackPlayer == Nothing) && (whitePlayer == Nothing)) = gamestate
+				| (blackPlayer == Nothing) = playGame (one, two) {(White, whitePlayer), (flipThis (theBoard gamestate) White whitePlayer)}
+				| (whitePlayerAfterBlack == Nothing) = playGame (one, two) {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)}
+				| Otherwise = playGame (one, two) {(White, whitePlayerAfterBlack), (flipThis (theBoard blackGamestate) White whitePlayerAfterBlack)}
+				where blackPlayer = one gamestate B
+				      whitePlayer = two gamestate W
+				      blackGamestate = (theBoard {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)})
+				      whitePlayerAfterBlack = two {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)} W
     
 {- | We have a main' IO function so that we can either:
      1. call our program from GHCi in the usual way
@@ -47,6 +69,30 @@ main' args = do
           (Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
 
 ---Strategies-------------------------------------------------------
+-- | Takes gamestate and player colour and returns Maybe (int, int)
+-- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
+-- if nothing can be found it passes.
+-- By Riley Lahd u r a b
+corners :: Chooser
+corners gamestate cell
+		| (elem (0,0) validMoves) = Just (0,0)
+		| (elem (0,7) validMoves) = Just (0,7)
+		| (elem (7,0) validMoves) = Just (7,0)
+		| (elem (7,7) validMoves) = Just (7,7)
+		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
+		| ((length validMoves) > 0) = Just (validMoves !! 0)
+		| ((length validMoves) == 0) = Nothing
+		where validMoves = (moves (theBoard gamestate) (playerOf cell))
+		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
+
+
+safeZone :: [(Int, Int)] -> [(Int, Int)]
+safeZone [] = []
+safeZone (coord:left)
+		| ((x > 1) && (x < 6) && (y > 1) && (y < 6)) = [coord] ++ (safeZone left)
+		| True = (safeZone left)
+		where x = fst coord
+		      y = snd coord
 
 {- | This is the type for all player functions.  A player strategy function takes a 
      board and returns a point (Int,Int) that it chooses -- this should be a legal move.  
