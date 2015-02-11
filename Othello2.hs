@@ -1,7 +1,7 @@
 import Debug.Trace 
 import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
-import System.Random
+--import System.Random
 import Data.List ((\\), nub)
 import System.Environment
 import System.IO.Unsafe
@@ -25,7 +25,7 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = playGame (pickLast, pickLast) initBoard --main' (unsafePerformIO getArgs)
+
 
 -- | to show the board each time it must look similar to this
 {- | playGame :: type1 -> type2 -> type3 -> IO()
@@ -38,19 +38,7 @@ playGame type1 type2 type3 = do
 		
 -}
 
-playGame :: (Chooser, Chooser) -> GameState -> IO()
-playGame (playing, waiting) gamestate = do
-				let currentPlayer = invertPlayer (fst (play gamestate))
-				    currentMove = playing gamestate (tile (invertPlayer (fst (play gamestate))))
-
-				putStrLn (show gamestate)
-				if ((waiting gamestate (tile (fst (play gamestate))) == Nothing) && (playing gamestate (tile currentPlayer) == Nothing))
-				then putStrLn (show gamestate) --TEMP -- ENDGAME
-				else	if (playing gamestate (tile currentPlayer) == Nothing)
-					then playGame (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
-					else playGame (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
-				
-{- |
+{-
 playGame :: (Chooser, Chooser) -> GameState -> Gamestate
 playGame (one, two) gamestate
 				| ((blackPlayer == Nothing) && (whitePlayer == Nothing)) = gamestate
@@ -61,44 +49,20 @@ playGame (one, two) gamestate
 				      whitePlayer = two gamestate W
 				      blackGamestate = (theBoard {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)})
 				      whitePlayerAfterBlack = two {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)} W
+  
 -}
-    
+  
 {- | We have a main' IO function so that we can either:
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
 -}
-main'           :: [String] -> IO()
-main' args = do
-    putStrLn "\nThe initial board:"
-    print initBoard
-    
-    putStrLn "The initial board rotated 90 degrees:"
-    putBoard $ rotateClock $ theBoard initBoard
-    
 
-    putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
-    let mv = reallyStupidStrategy (initBoard) B
-       in case mv of
-          Nothing   -> putStrLn "Black passed."
-          (Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
 
 ---Strategies-------------------------------------------------------
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
 -- if nothing can be found it passes.
-
--- | This strategy takes the first move from the returned list of valid moves
-firstMoveChoice :: Chooser
-firstMoveChoice gamestate player = 	if (moves (theBoard gamestate) (playerOf player)) == [] 
-					then Nothing
-					else Just (head (moves (theBoard gamestate) (playerOf player)))
-
--- | This strategy takes the last move in the list of valid moves for a given player. If no valid move exists it should return Nothing
-pickLast :: Chooser
-pickLast gamestate cell
-                              | ((length (moves (theBoard gamestate) (playerOf cell))) == 0) = Nothing
-                              | otherwise = Just (head (reverse (moves (theBoard gamestate) (playerOf cell))))
-
+-- By Riley Lahd u r a b
 corners :: Chooser
 corners gamestate cell
 		| (elem (0,0) validMoves) = Just (0,0)
@@ -119,80 +83,6 @@ safeZone (coord:left)
 		| True = (safeZone left)
 		where x = fst coord
 		      y = snd coord
-
--- | Greedy AI -----------------------------------------------------------------
-
---Picks the potential move with the highest points value
-greedyPick :: Chooser
-greedyPick gamestate cell
-	|((length validMoves) == 0)= Nothing
-	|otherwise = Just(backToPoint (getMax(map (spotToScored (theBoard gamestate) cell)  validMoves)))
-	where validMoves = (moves (theBoard gamestate) (playerOf cell))
-
---Determines if line should be counted
-lineCounts :: (Int, Int) -> Board -> Player -> Direction -> Int
-lineCounts (x,y) board player direction
-			|hasAlly (getList(x,y) board direction) player = score' (x, y) board player direction
-			|otherwise = 0
-
-
---Takes a cell and a direction to create an arry from that cell to the edge of the board in the given direction
-getList :: (Int, Int) -> Board -> Direction -> [Cell]
-getList ( x,y) board direction
-			| direction (x, y) == (-1,-1) = []
-			| otherwise = getCell2 board (x, y) : getList (x, y) board direction
-
---Given a cell coordinate and play, assigns a points value if the tile is of the opposite colour
-cellValue :: (Int, Int) -> Player -> Board -> Int
-cellValue (x,y) player board 
-			|getCell2 board (x, y) == tile (invertPlayer player) = 1
-			|getCell2 board (x, y) /= tile (invertPlayer player) = 0
-
-
---Gives the potential score for each potential move
-score :: (Int, Int) -> Board -> Player -> Int
-score (x, y) board player = lineCounts (x, y+1) board player up 
-		    + lineCounts ((x+1), (y+1)) board player upRight 
-		    + lineCounts ((x-1), (y+1)) board player upLeft
-		    + lineCounts ((x+1), y) board player right 
-		    + lineCounts ((x-1), y) board player left
-		    + lineCounts (x, (y-1)) board player down
-		    + lineCounts ((x+1), (y-1)) board player downRight
-		    + lineCounts ((x-1), (y-1)) board player downLeft 
-
---Gets the score for a potential move in a particular direction
-score' :: (Int, Int) -> Board -> Player -> Direction -> Int
-score' (x, y) board player direction
-			| thisSpace (x,y) == (-1,-1) = 0
-			| direction (x,y) == (-1,-1) = 0
-			|(cellValue (x, y) player board) == 0 = 0
-			|(cellValue (x, y) player board) == 1 = 1 + (score' (x, y) board player direction)
-
---Creates a data type that hold the score the tile will received and the tile's coordinates 
-data ScoredMove = SM (Int, Int) (Int)
-  deriving (Eq)
-
---Gets the score value from ScoredMove  
-points :: ScoredMove -> Int	
-points (SM _ points) = points
-
---Gets the coordinates value from ScoredMove
-backToPoint :: ScoredMove -> (Int, Int)
-backToPoint (SM (x, y) _) = (x, y)
-
---Takes a list of ScoredMoves and returns with the maximum score
-getMax:: [ScoredMove] -> ScoredMove
-getMax (x:y:[]) 
-		|(points x) >= (points y) = x
-		| otherwise = y
-getMax (x:y:xs)
-		| (points x) >= (points y) = getMax (x:xs)
-		| otherwise = getMax (y:xs)
-	
---Makes ScoredMoves	
-spotToScored :: Board -> Cell ->(Int, Int) -> ScoredMove
-spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
-----------------------------
 
 {- | This is the type for all player functions.  A player strategy function takes a 
      board and returns a point (Int,Int) that it chooses -- this should be a legal move.  
@@ -355,14 +245,14 @@ rotatePt             :: PointRotation
 rotatePt             (x,y) = (7-y, x)   
 
 -- | Auxilliary Functions -----------------------------------------------
-demoBoard = [ [E, E, E, E, E, E, E, E],
-	      [E, E, E, E, E, E, E, E],
-              [E, E, E, E, W, B, E, E],
-	      [E, E, E, W, B, E, E, E],
-	      [E, E, E, B, W, E, E, E],
-     	      [E, E, B, W, E, E, E, E],
-	      [E, E, E, E, E, E, E, E],
-	      [E, E, E, E, E, E, E, E] ]
+demoBoard = [ [B, E, E, E, E, E, E, E],	
+	      [E, W, B, B, E, B, B, E], 
+              [E, E, B, W, W, W, B, E],	
+              [B, W, B, W, E, W, B, E], 
+              [E, E, B, W, W, W, B, E], 
+              [E, E, B, B, B, B, B, E], 
+              [E, E, E, E, E, E, W, E], 
+              [E, E, E, E, E, E, E, B] ]
 
 demoState       :: GameState
 demoState       = GameState (Black, Init)
@@ -432,11 +322,36 @@ countTiles' player p p' (x:xs) = if x == tile player
 				then countTiles' player (p+1) p' xs
 				else 	if x == tile (invertPlayer player)
 					then countTiles' player p (p'+1) xs
-					else countTiles' player p p' xs
+					else countTiles' player p p' xs 
 
-val :: (Maybe (Int, Int)) -> (Int, Int)
-val Nothing = (-1,-1)
-val (Just x) = x
+---AIs---------------------------------------------------------------------------
+
+-- | Takes gamestate and player colour and returns Maybe (int, int)
+-- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
+-- if nothing can be found it passes.
+-- By Riley Lahd u r a b
+{-
+corners :: Chooser
+corners gamestate cell
+		| (elem (0,0) validMoves) = Just (0,0)
+		| (elem (0,7) validMoves) = Just (0,7)
+		| (elem (7,0) validMoves) = Just (7,0)
+		| (elem (7,7) validMoves) = Just (7,7)
+		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
+		| ((length validMoves) > 0) = Just (validMoves !! 0)
+		| ((length validMoves) == 0) = Nothing
+		where validMoves = (moves (theBoard gamestate) (playerOf cell))
+		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
+
+
+safeZone :: [(Int, Int)] -> [(Int, Int)]
+safeZone [] = []
+safeZone (coord:left)
+		| ((x > 1) && (x < 6) && (y > 1) && (y < 6)) = [coord] ++ (safeZone left)
+		| True = (safeZone left)
+		where x = fst coord
+		      y = snd coord
+-}
 
 -- | FLIPPING FUNCTIONS -----
 
@@ -447,7 +362,7 @@ flipThis board player (7,0) = (flipDownLeftForward (flipDownForward (flipLeftFor
 flipThis board player (0,7) = (flipUpRightForward (flipUpForward (flipRightForward (replace2 board (0,7) (tile player)) player (1,7)) player (0,6)) player (1,6))
 flipThis board player (7,7) = (flipUpLeftForward (flipUpForward (flipLeftForward (replace2 board (7,7) (tile player)) player (6,7)) player (7,6)) player (6,6))
 flipThis board player (x,0) = (flipDownRightForward (flipDownLeftForward (flipDownForward (flipRightForward (flipLeftForward (replace2 board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,1)) player (x-1,1)) player (x+1,1))
-flipThis board player (x,7) = (flipUpRightForward (flipUpLeftForward (flipUpForward (flipRightForward (flipLeftForward (replace2 board (x,7) (tile player)) player (x-1,7)) player (x+1,7)) player (x,6)) player (x-1,6)) player (x+1,6))
+flipThis board player (x,7) = (flipUpRightForward (flipUpLeftForward (flipUpForward (flipRightForward (flipLeftForward (replace2 board (x,0) (tile player)) player (x-1,0)) player (x+1,0)) player (x,6)) player (x-1,6)) player (x+1,6))
 flipThis board player (7,y) = (flipDownLeftForward (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (replace2 board (7,y) (tile player)) player (6,y)) player (7,y-1)) player (7, y+1)) player (6,y-1)) player (6,y+1))
 flipThis board player (0,y) = (flipDownRightForward (flipUpRightForward (flipDownForward (flipUpForward (flipRightForward (replace2 board (0,y) (tile player)) player (1,y)) player (0,y-1)) player (0, y+1)) player (1,y-1)) player (1,y+1))
 flipThis board player (x,y) = (flipDownRightForward (flipUpRightForward (flipDownLeftForward (flipUpLeftForward (flipUpLeftForward (flipDownForward (flipUpForward (flipLeftForward (flipRightForward (replace2 board (x,y) (tile player)) player (x+1,y)) player (x-1, y)) player (x,y-1)) player (x, y+1)) player (x-1,y-1)) player (x-1,y-1)) player (x-1,y+1)) player (x+1,y-1)) player (x+1,y+1))
@@ -764,7 +679,7 @@ movesVerticalUp' column player columnNum
 	where valid = movesInLine (tail (reverse column)) player
 	      coord = [(columnNum, (length column)-1)]
 	      next = movesVerticalUp' (dropLast column) player columnNum
-	      empty = cell2Char (head (reverse column)) == '_'
+	      empty = cell2Char (head column) == '_'
 movesVerticalUp' _ _ _ = []
 
 -- | Compiles a list of valid moves looking down
@@ -958,66 +873,124 @@ frame (x:xs) player
 	| x == tile player = []
 	| x /= tile player = [x] ++ frame xs player
 
-----------------------------------------------------------------------------------
---module Movement where
-
--- I meant something more like the following.
-
-type Direction = (Int,Int) -> (Int,Int) -- Maybe (Int,Int) is also a good return type here.
-
-directions :: [Direction]
-directions = [up, down, left, right, upRight, upLeft, downRight, downLeft, thisSpace]
 
 
-up :: (Int, Int) -> (Int, Int)
-up (x, y)
-		| (y+1) > 7 = (-1,-1)
-		| otherwise = (x, (y+1))
-			
-upRight :: (Int, Int) -> (Int, Int)
-upRight (x, y)
-		| (y+1) > 7 = (-1,-1)
-		| (x+1) > 7 = (-1,-1)
-		| otherwise = ((x+1), (y+1))
-			
-upLeft :: (Int, Int) -> (Int, Int)
-upLeft (x,y) 
-		| (y+1) > 7 = (-1,-1)
-		| (x-1) < 0 = (-1,-1)
-		| otherwise = ((x-1), (y+1))
-			
-right :: (Int, Int) -> (Int, Int)
-right (x, y)
-		| (x+1) > 7 = (-1,-1)
-		| otherwise = ((x+1), y)
-			
-left :: (Int, Int) -> (Int, Int)
-left (x, y)
-		| (x-1) < 0 = (-1,-1)
-		| otherwise = ((x-1), y)
-			
-down :: (Int, Int) -> (Int, Int)
-down (x, y)
-		| (y-1) < 0 = (-1,-1)
-		| otherwise = (x, (y-1))
-			
-downRight :: (Int, Int) -> (Int, Int)
-downRight (x, y)
-		| (y-1) < 0 = (-1,-1)
-		| (x+1) > 7 = (-1,-1)
-		| otherwise = ((x+1), (y-1))
-			
-downLeft :: (Int, Int) -> (Int, Int)
-downLeft (x, y)
-		| (y-1) < 0 = (-1,-1)
-		| (x-1) < 0 = (-1,-1)
-		| otherwise = ((x-1), (y-1))
 
-thisSpace :: (Int, Int) -> (Int, Int)
-thisSpace (x, y)
-		| (y+1) > 7 = (-1,-1)
-		| (x+1) > 7 = (-1,-1)
-		| (y-1) < 0 = (-1,-1)
-		| (x-1) < 0 = (-1,-1)
-		| otherwise = (x, y)
---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+checkInput :: String -> Bool
+checkInput a
+		| a == "corners" = True
+{-
+		| a == "greedy" = True
+		| a == "random" = True
+		| a == "first" = True
+		| a == "last" = True
+-}
+		| otherwise = False
+
+
+stringToPlayer :: String -> Chooser
+stringToPlayer a
+		| a == "corners" = corners
+{-
+		| a == "greedy" = greedy
+		| a == "random" = random
+		| a == "first" = first
+		| a == "last" = last
+-}
+
+
+
+main = do
+{-
+   !!!!USELESS REFERENCE CODE
+
+   args <- getArgs  
+   progName <- getProgName  
+   putStrLn "The arguments are:"  
+   mapM putStrLn args  
+   putStrLn "The program name is:"  
+   putStrLn progName
+-}
+
+
+	args <- getArgs
+
+	--These "getLine" statements need to be moved into the "if" statement below
+	{-
+	putStrLn "Choose Player 1 strategy"
+	player1 <- getLine
+
+	putStrLn "Choose player 2 strategy"
+	player2 <- getLine
+	-}
+
+
+	if length (args) == 0
+	then
+		getInput
+	else
+		if length (args) == 2
+		then
+			if checkInput (args !! 0) && checkInput (args !! 1)
+			then main' args
+			else putStrLn "Invalid input"
+
+		else putStrLn "Invalid input"
+
+
+
+getInput :: IO()
+getInput = do
+	putStrLn "Choose Player 1 strategy"
+	player1 <- getLine
+
+	putStrLn "Choose player 2 strategy"
+	player2 <- getLine
+
+	if checkInput player1 && checkInput player2
+	then main' ([player1] ++ [player2])
+	else putStrLn "Invalid input"
+
+
+
+
+main' :: [String] -> IO()
+main' args = do
+
+	putStrLn "\nThe initial board:"
+	print initBoard
+
+	playGame (stringToPlayer (args !! 0)) (stringToPlayer (args !! 1)) B
+
+
+
+
+playGame :: Chooser -> Chooser -> Cell -> IO()
+playGame black white c = do
+	putStrLn "The board after one move :"
+	let mv = if c == B
+		then black (initBoard) B
+		else white (initBoard) W
+	   in case mv of
+		Nothing -> putStrLn "Passed."
+		(Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
+
