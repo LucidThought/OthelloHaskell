@@ -25,7 +25,7 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = playGame (pickLast, pickLast) initBoard --main' (unsafePerformIO getArgs)
+main = playGame (corners, corners) initBoard --main' (unsafePerformIO getArgs)
 
 -- | to show the board each time it must look similar to this
 {- | playGame :: type1 -> type2 -> type3 -> IO()
@@ -105,12 +105,21 @@ corners gamestate cell
 		| (elem (0,7) validMoves) = Just (0,7)
 		| (elem (7,0) validMoves) = Just (7,0)
 		| (elem (7,7) validMoves) = Just (7,7)
+		| sides validMoves /= [] = Just ((sides validMoves) !! 0) 
 		| (safeZone validMoves) /= [] = Just ((safeZone validMoves) !! 0)
 		| ((length validMoves) > 0) = Just (validMoves !! 0)
 		| ((length validMoves) == 0) = Nothing
 		where validMoves = (moves (theBoard gamestate) (playerOf cell))
 		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
 
+sides :: [(Int, Int)] -> [(Int, Int)]
+sides [] = []
+sides (x:xs)
+	|(fst x == 7) = [x] ++ sides xs
+	|(fst x == 0) = [x] ++ sides xs
+	|(snd x == 7) = [x] ++ sides xs
+	|(snd x == 0) = [x] ++ sides xs
+	|otherwise = sides xs
 
 safeZone :: [(Int, Int)] -> [(Int, Int)]
 safeZone [] = []
