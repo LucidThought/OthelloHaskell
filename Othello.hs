@@ -75,7 +75,9 @@ main' args = do
 
 -- | This strategy takes the first move from the returned list of valid moves
 firstMoveChoice :: Chooser
-firstMoveChoice board player = head (moves board (playerOf player))
+firstMoveChoice board player = 	if (moves board (playerOf player)) == [] 
+				then Passed
+				else head (moves board (playerOf player))
 
 corners :: Chooser
 corners gamestate cell
