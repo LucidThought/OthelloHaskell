@@ -72,7 +72,11 @@ main' args = do
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
 -- if nothing can be found it passes.
--- By Riley Lahd u r a b
+
+-- | This strategy takes the first move from the returned list of valid moves
+firstMoveChoice :: Chooser
+firstMoveChoice board player = head (moves board (playerOf player))
+
 corners :: Chooser
 corners gamestate cell
 		| (elem (0,0) validMoves) = Just (0,0)
