@@ -25,7 +25,7 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = playGame (corners, corners) initBoard --main' (unsafePerformIO getArgs)
+main = startGame (corners, corners) initBoard --main' (unsafePerformIO getArgs)
 
 -- | to show the board each time it must look similar to this
 {- | playGame :: type1 -> type2 -> type3 -> IO()
@@ -37,7 +37,12 @@ playGame type1 type2 type3 = do
 		takes tuples of (AI, Player) first one being the one about to play and the second being the one that just played
 		
 -}
+startGame :: (Chooser, Chooser) -> GameState -> IO()
+startGame (black, white) gamestate = do
+				let currentMove = black gamestate B
 
+				putStrLn (show gamestate)
+				playGame (white, black) (GameState (Black , (Played (val currentMove))) (flipThis (theBoard gamestate) Black (val currentMove)))
 playGame :: (Chooser, Chooser) -> GameState -> IO()
 playGame (playing, waiting) gamestate = do
 				let currentPlayer = invertPlayer (fst (play gamestate))
@@ -45,11 +50,20 @@ playGame (playing, waiting) gamestate = do
 
 				putStrLn (show gamestate)
 				if ((waiting gamestate (tile (fst (play gamestate))) == Nothing) && (playing gamestate (tile currentPlayer) == Nothing))
-				then putStrLn (show gamestate) --TEMP -- ENDGAME
+				then endGame gamestate
+				     --putStrLn (show (GameState (currentPlayer , Passed)  (theBoard gamestate)))
+				     --putStrLn (show (GameState ((invertPlayer currentPlayer) , Passed)  (theBoard gamestate)))
 				else	if (playing gamestate (tile currentPlayer) == Nothing)
 					then playGame (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
 					else playGame (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
-				
+	
+endGame :: GameState -> IO()
+endGame gamestate = do
+		let currentPlayer = invertPlayer (fst (play gamestate))		
+		
+		putStrLn (show (GameState (currentPlayer , Passed)  (theBoard gamestate)))
+		putStrLn (show (GameState ((invertPlayer currentPlayer) , Passed)  (theBoard gamestate)))
+		putStrLn (show (countTiles (theBoard gamestate)))
 {- |
 playGame :: (Chooser, Chooser) -> GameState -> Gamestate
 playGame (one, two) gamestate
