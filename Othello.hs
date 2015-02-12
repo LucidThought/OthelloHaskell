@@ -223,10 +223,6 @@ spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
 -}           
 type Chooser = GameState -> Cell -> Maybe (Int,Int)
 
--- | This strategy lives up to it's name: it always chooses to play at cell (0,0).
-reallyStupidStrategy  :: Chooser
-reallyStupidStrategy b c = Just (0,0)
-
 
 ---Board rotations-------------------------------------------------------------
 
