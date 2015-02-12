@@ -102,8 +102,8 @@ main' args = do
 -- if nothing can be found it passes.
 
 -- | This strategy takes the first move from the returned list of valid moves
-firstMoveChoice :: Chooser
-firstMoveChoice gamestate player = 	if (moves (theBoard gamestate) (playerOf player)) == [] 
+pickFirst :: Chooser
+pickFirst gamestate player = 	if (moves (theBoard gamestate) (playerOf player)) == [] 
 					then Nothing
 					else Just (head (moves (theBoard gamestate) (playerOf player)))
 
