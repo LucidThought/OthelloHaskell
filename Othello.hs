@@ -25,45 +25,93 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = startGame (corners, pickLast) initBoard --main' (unsafePerformIO getArgs)
 
--- | to show the board each time it must look similar to this
-{- | playGame :: type1 -> type2 -> type3 -> IO()
-playGame type1 type2 type3 = do
-		putStrLn (show board) or gamestate
-		<insert game logic here>
-		playGame switchtypes
+main = do--startGame (corners, pickLast) initBoard --main' (unsafePerformIO getArgs)
+	args <- getArgs
 
-		takes tuples of (AI, Player) first one being the one about to play and the second being the one that just played
-		
--}
-startGame :: (Chooser, Chooser) -> GameState -> IO()
-startGame (black, white) gamestate = do
+	if length (args) == 0
+	then
+		getInput
+	else
+		if length (args) == 2
+		then
+			if checkInput (args !! 0) && checkInput (args !! 1)
+			then main' args
+			else putStr "Invalid input\nPossible strategies:\n  first\n  last\n  greedy\n  corners\n"
+
+		else putStr "Invalid input\nPossible strategies:\n  first\n  last\n  greedy\n  corners\n"
+
+main' :: [String] -> IO()
+main' args = do
+
+	--putStrLn "\nThe initial board:"
+	--print initBoard
+
+	startGame args ((stringToPlayer (args !! 0)), (stringToPlayer (args !! 1))) initBoard
+
+startGame :: [String] -> (Chooser, Chooser) -> GameState -> IO()
+startGame names (black, white) gamestate = do
 				let currentMove = black gamestate B
 
 				putStrLn (show gamestate)
-				playGame (white, black) (GameState (Black , (Played (val currentMove))) (flipThis (theBoard gamestate) Black (val currentMove)))
-playGame :: (Chooser, Chooser) -> GameState -> IO()
-playGame (playing, waiting) gamestate = do
+				playGame names (white, black) (GameState (Black , (Played (val currentMove))) (flipThis (theBoard gamestate) Black (val currentMove)))
+playGame ::  [String] -> (Chooser, Chooser) -> GameState -> IO()
+playGame names (playing, waiting) gamestate = do
 				let currentPlayer = invertPlayer (fst (play gamestate))
 				    currentMove = playing gamestate (tile (invertPlayer (fst (play gamestate))))
 
 				putStrLn (show gamestate)
 				if ((waiting gamestate (tile (fst (play gamestate))) == Nothing) && (playing gamestate (tile currentPlayer) == Nothing))
-				then endGame gamestate
+				then endGame names gamestate (playing, waiting)
 				     --putStrLn (show (GameState (currentPlayer , Passed)  (theBoard gamestate)))
 				     --putStrLn (show (GameState ((invertPlayer currentPlayer) , Passed)  (theBoard gamestate)))
 				else	if (playing gamestate (tile currentPlayer) == Nothing)
-					then playGame (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
-					else playGame (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
+					then playGame names (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
+					else playGame names (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
 	
-endGame :: GameState -> IO()
-endGame gamestate = do
+endGame :: [String] ->  GameState -> (Chooser, Chooser) -> IO()
+endGame names gamestate (one, two) = do
 		let currentPlayer = invertPlayer (fst (play gamestate))		
+		    score = (countTiles (theBoard gamestate))
 		
 		putStrLn (show (GameState (currentPlayer , Passed)  (theBoard gamestate)))
 		putStrLn (show (GameState ((invertPlayer currentPlayer) , Passed)  (theBoard gamestate)))
-		putStrLn (show (countTiles (theBoard gamestate)))
+		if ((fst score) > (snd score))
+		then putStrLn (("Black wins!  Black (")++ (names !! 0) ++("): ") ++ (show (fst score)) ++ ( "  White (")++ (names !! 1) ++("): ") ++ (show (snd score)))
+		else putStrLn (("White wins!  Black (")++ (names !! 0) ++("): ") ++ (show (fst score)) ++ ( "  White (")++ (names !! 1) ++("): ") ++ (show (snd score)))
+
+-- I/O FUNCTIONS- -------------
+checkInput :: String -> Bool
+checkInput a
+		| a == "corners" = True
+		| a == "greedy" = True
+		| a == "first" = True
+		| a == "last" = True
+		| otherwise = False
+		--Andrew is a b
+		--U R A B
+
+
+stringToPlayer :: String -> Chooser
+stringToPlayer a
+		| a == "corners" = corners
+		| a == "greedy" = greedyPick
+		| a == "first" = pickFirst
+		| a == "last" = pickLast
+
+getInput :: IO()
+getInput = do
+	putStr "Possible strategies:\n  first\n  last\n  greedy\n  corners\n"
+	putStr "Enter strategy for BLACK: "
+	player1 <- getLine
+
+	putStr "Enter strategy for WHITE: "
+	player2 <- getLine
+
+	if checkInput player1 && checkInput player2
+	then main' ([player1] ++ [player2])
+	else putStr "Invalid input\nPossible strategies:\n  first\n  last\n  greedy\n  corners\n"
+
 {- |
 playGame :: (Chooser, Chooser) -> GameState -> Gamestate
 playGame (one, two) gamestate
@@ -80,7 +128,7 @@ playGame (one, two) gamestate
 {- | We have a main' IO function so that we can either:
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
--}
+
 main'           :: [String] -> IO()
 main' args = do
     putStrLn "\nThe initial board:"
@@ -89,7 +137,7 @@ main' args = do
     putStrLn "The initial board rotated 90 degrees:"
     putBoard $ rotateClock $ theBoard initBoard
     
-{-
+
     putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
     let mv = reallyStupidStrategy (initBoard) B
        in case mv of
