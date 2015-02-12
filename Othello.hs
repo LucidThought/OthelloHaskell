@@ -375,24 +375,24 @@ rotatePt             (x,y) = (7-y, x)
 
 -- | Auxilliary Functions -----------------------------------------------
 demoBoard = [ [E, E, E, E, E, E, E, E],
-	      [E, E, E, E, E, E, E, E],
-              [E, E, E, E, W, B, E, E],
-	      [E, E, E, W, B, E, E, E],
-	      [E, E, E, B, W, E, E, E],
-     	      [E, E, B, W, E, E, E, E],
-	      [E, E, E, E, E, E, E, E],
-	      [E, E, E, E, E, E, E, E] ]
+	      [E, E, E, E, E, E, W, W],
+              [E, E, E, E, W, B, W, W],
+	      [E, E, E, W, B, E, W, W],
+	      [E, E, E, B, W, E, W, W],
+     	      [E, E, B, W, E, E, W, W],
+	      [E, E, E, E, E, E, W, W],
+	      [E, E, E, E, E, E, B, B] ]
 
 demoState       :: GameState
 demoState       = GameState (Black, Init)
-            [ [B, E, E, E, E, E, E, E],	
-	      [E, W, B, B, E, B, B, E], 
-              [E, E, B, W, W, W, B, E],	
-              [B, W, B, W, E, W, B, E], 
-              [E, E, B, W, W, W, B, E], 
-              [E, E, B, B, B, B, B, E], 
-              [E, E, E, E, E, E, W, E], 
-              [E, E, E, E, E, E, E, B] ]
+            [ [E, E, E, E, E, E, E, B],
+	      [E, E, E, E, E, E, W, W],
+              [E, E, E, E, W, B, W, W],
+	      [E, E, E, W, B, E, W, W],
+	      [E, E, E, B, W, E, W, W],
+     	      [E, E, B, W, E, E, W, W],
+	      [E, E, E, E, E, E, W, W],
+	      [E, E, E, E, E, E, B, B] ]
 
 -- | Replaces the nth element in a row with a new element.
 replace         :: [a] -> Int -> a -> [a]
