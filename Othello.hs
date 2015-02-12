@@ -143,54 +143,15 @@ safeZone (coord:left)
 		where x = fst coord
 		      y = snd coord
 
--- | Greedy AI -----------------------------------------------------------------
+-- | Greedy AI
 
 --Picks the potential move with the highest points value
 greedyPick :: Chooser
 greedyPick gamestate cell
 	|((length validMoves) == 0)= Nothing
 	|otherwise = Just(backToPoint (getMax(map (spotToScored (theBoard gamestate) cell)  validMoves)))
-	where validMoves = (moves (theBoard gamestate) (playerOf cell))
-
---Determines if line should be counted
-lineCounts :: (Int, Int) -> Board -> Player -> Direction -> Int
-lineCounts (x,y) board player direction
-			|hasAlly (getList(x,y) board direction) player = score' (x, y) board player direction
-			|otherwise = 0
-
-
---Takes a cell and a direction to create an arry from that cell to the edge of the board in the given direction
-getList :: (Int, Int) -> Board -> Direction -> [Cell]
-getList ( x,y) board direction
-			| direction (x, y) == (-1,-1) = []
-			| otherwise = getCell2 board (x, y) : getList (x, y) board direction
-
---Given a cell coordinate and play, assigns a points value if the tile is of the opposite colour
-cellValue :: (Int, Int) -> Player -> Board -> Int
-cellValue (x,y) player board 
-			|getCell2 board (x, y) == tile (invertPlayer player) = 1
-			|getCell2 board (x, y) /= tile (invertPlayer player) = 0
-
-
---Gives the potential score for each potential move
-score :: (Int, Int) -> Board -> Player -> Int
-score (x, y) board player = lineCounts (x, y+1) board player up 
-		    + lineCounts ((x+1), (y+1)) board player upRight 
-		    + lineCounts ((x-1), (y+1)) board player upLeft
-		    + lineCounts ((x+1), y) board player right 
-		    + lineCounts ((x-1), y) board player left
-		    + lineCounts (x, (y-1)) board player down
-		    + lineCounts ((x+1), (y-1)) board player downRight
-		    + lineCounts ((x-1), (y-1)) board player downLeft 
-
---Gets the score for a potential move in a particular direction
-score' :: (Int, Int) -> Board -> Player -> Direction -> Int
-score' (x, y) board player direction
-			| thisSpace (x,y) == (-1,-1) = 0
-			| direction (x,y) == (-1,-1) = 0
-			|(cellValue (x, y) player board) == 0 = 0
-			|(cellValue (x, y) player board) == 1 = 1 + (score' (x, y) board player direction)
-
+		where validMoves = (moves (theBoard gamestate) (playerOf cell))
+		
 --Creates a data type that hold the score the tile will received and the tile's coordinates 
 data ScoredMove = SM (Int, Int) (Int)
   deriving (Eq)
@@ -203,19 +164,59 @@ points (SM _ points) = points
 backToPoint :: ScoredMove -> (Int, Int)
 backToPoint (SM (x, y) _) = (x, y)
 
+--Makes ScoredMoves	
+spotToScored :: Board -> Cell ->(Int, Int) -> ScoredMove
+spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
+
 --Takes a list of ScoredMoves and returns with the maximum score
 getMax:: [ScoredMove] -> ScoredMove
+getMax (x:[]) = x
 getMax (x:y:[]) 
 		|(points x) >= (points y) = x
 		| otherwise = y
 getMax (x:y:xs)
 		| (points x) >= (points y) = getMax (x:xs)
 		| otherwise = getMax (y:xs)
+		
+--Gives the potential score for each potential move
+score :: (Int, Int) -> Board -> Player -> Int
+score (x, y) board player = lineCounts (x, y+1) board player up 
+		    + lineCounts ((x+1), (y+1)) board player upRight 
+		    + lineCounts ((x-1), (y+1)) board player upLeft
+		    + lineCounts ((x+1), y) board player right 
+		    + lineCounts ((x-1), y) board player left
+		    + lineCounts (x, (y-1)) board player down
+		    + lineCounts ((x+1), (y-1)) board player downRight
+		    + lineCounts ((x-1), (y-1)) board player downLeft 
 	
---Makes ScoredMoves	
-spotToScored :: Board -> Cell ->(Int, Int) -> ScoredMove
-spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
-----------------------------
+--Determines if line should be counted
+lineCounts :: (Int, Int) -> Board -> Player -> Direction -> Int
+lineCounts (x,y) board player direction
+			|hasAlly (getList(x,y) board direction) player = score' (x, y) board player direction
+			|otherwise = 0
+			
+--Takes a cell and a direction to create an arry from that cell to the edge of the board in the given direction
+getList :: (Int, Int) -> Board -> Direction -> [Cell]
+getList ( x,y) board direction
+			|thisSpace(x, y) == (-1,-1) = []
+			| otherwise = (getCell2 board (x, y)) : (getList (direction(x, y)) board direction)
+			
+--Gets the score for a potential move in a particular direction
+score' :: (Int, Int) -> Board -> Player -> Direction -> Int
+score' (x, y) board player direction
+			| thisSpace (x,y) == (-1,-1) = 0
+			| direction (x,y) == (-1,-1) = 0
+			|(cellValue (x, y) player board) == 0 = 0
+			|(cellValue (x, y) player board) == 1 = 1 + (score' (direction (x, y)) board player direction)
+
+--Given a cell coordinate and play, assigns a points value if the tile is of the opposite colour
+cellValue :: (Int, Int) -> Player -> Board -> Int
+cellValue (x,y) player board 
+			|getCell2 board (x, y) == tile (invertPlayer player) = 1
+			|getCell2 board (x, y) == tile player = 0
+			|otherwise = 0
+
+---------------------------
 
 {- | This is the type for all player functions.  A player strategy function takes a 
      board and returns a point (Int,Int) that it chooses -- this should be a legal move.  
