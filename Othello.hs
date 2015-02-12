@@ -81,6 +81,7 @@ endGame names gamestate (one, two) = do
 		else putStrLn (("White wins!  Black (")++ (names !! 0) ++("): ") ++ (show (fst score)) ++ ( "  White (")++ (names !! 1) ++("): ") ++ (show (snd score)))
 
 -- I/O FUNCTIONS- -------------
+-- | This function checks that an input strategy is a real, valid strategy
 checkInput :: String -> Bool
 checkInput a
 		| a == "corners" = True
@@ -91,7 +92,7 @@ checkInput a
 		--Andrew is a b
 		--U R A B
 
-
+-- | this strategy convers input strings to actual function
 stringToPlayer :: String -> Chooser
 stringToPlayer a
 		| a == "corners" = corners
@@ -99,6 +100,7 @@ stringToPlayer a
 		| a == "first" = pickFirst
 		| a == "last" = pickLast
 
+-- | this function takes input if none was given on command line
 getInput :: IO()
 getInput = do
 	putStr "Possible strategies:\n  first\n  last\n  greedy\n  corners\n"
@@ -160,7 +162,7 @@ pickLast :: Chooser
 pickLast gamestate cell
                               | ((length (moves (theBoard gamestate) (playerOf cell))) == 0) = Nothing
                               | otherwise = Just (head (reverse (moves (theBoard gamestate) (playerOf cell))))
-
+-- | this strategy prioritizes corners, then sides, then anything not touching sides
 corners :: Chooser
 corners gamestate cell
 		| (elem (0,0) validMoves) = Just (0,0)
@@ -174,6 +176,7 @@ corners gamestate cell
 		where validMoves = (moves (theBoard gamestate) (playerOf cell))
 		      --safe = (((fst )> 0) && ((fst ) < 7) && ((snd ) > 0) && ((snd ) < 7))
 
+-- | this strategy returns avaliable moves along the sides
 sides :: [(Int, Int)] -> [(Int, Int)]
 sides [] = []
 sides (x:xs)
@@ -183,6 +186,7 @@ sides (x:xs)
 	|(snd x == 0) = [x] ++ sides xs
 	|otherwise = sides xs
 
+-- | this strategy returns avaliable moves away from the sides
 safeZone :: [(Int, Int)] -> [(Int, Int)]
 safeZone [] = []
 safeZone (coord:left)
