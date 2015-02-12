@@ -518,7 +518,11 @@ flipUpForward board player (x,7) = if ((getCell2 board (x,7)) == E)
 					else	if ((getCell2 board (x,7)) == tile player)
 						then (flipUpBackward board player (x,6))
 						else board
-flipUpForward board player (x,0) = board
+flipUpForward board player (x,0) = if ((getCell2 board (x,0)) == E)
+					then board
+					else	if ((getCell2 board (x,0)) == tile player)
+						then (flipUpBackward board player (x,1))
+						else board
 flipUpForward board player (x,y) = if ((getCell2 board (x,y)) == (tile (invertPlayer player)))
 					then (flipUpForward board player (x,y-1))
 					else if (getCell2 board (x,y)) == (tile player)
