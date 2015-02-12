@@ -25,7 +25,7 @@ express or implied warranty.
 
 ---Main-------------------------------------------------------------
 
-main = startGame (corners, corners) initBoard --main' (unsafePerformIO getArgs)
+main = startGame (corners, pickLast) initBoard --main' (unsafePerformIO getArgs)
 
 -- | to show the board each time it must look similar to this
 {- | playGame :: type1 -> type2 -> type3 -> IO()
