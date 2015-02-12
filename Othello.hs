@@ -89,13 +89,13 @@ main' args = do
     putStrLn "The initial board rotated 90 degrees:"
     putBoard $ rotateClock $ theBoard initBoard
     
-
+{-
     putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
     let mv = reallyStupidStrategy (initBoard) B
        in case mv of
           Nothing   -> putStrLn "Black passed."
           (Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
-
+-}
 ---Strategies-------------------------------------------------------
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
