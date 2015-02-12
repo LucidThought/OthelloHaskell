@@ -89,21 +89,21 @@ main' args = do
     putStrLn "The initial board rotated 90 degrees:"
     putBoard $ rotateClock $ theBoard initBoard
     
-
+{-
     putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
     let mv = reallyStupidStrategy (initBoard) B
        in case mv of
           Nothing   -> putStrLn "Black passed."
           (Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
-
+-}
 ---Strategies-------------------------------------------------------
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
 -- if nothing can be found it passes.
 
 -- | This strategy takes the first move from the returned list of valid moves
-firstMoveChoice :: Chooser
-firstMoveChoice gamestate player = 	if (moves (theBoard gamestate) (playerOf player)) == [] 
+pickFirst :: Chooser
+pickFirst gamestate player = 	if (moves (theBoard gamestate) (playerOf player)) == [] 
 					then Nothing
 					else Just (head (moves (theBoard gamestate) (playerOf player)))
 
@@ -222,10 +222,6 @@ spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
      If the player passes, the funciton should return Nothing.
 -}           
 type Chooser = GameState -> Cell -> Maybe (Int,Int)
-
--- | This strategy lives up to it's name: it always chooses to play at cell (0,0).
-reallyStupidStrategy  :: Chooser
-reallyStupidStrategy b c = Just (0,0)
 
 
 ---Board rotations-------------------------------------------------------------
@@ -517,12 +513,12 @@ flipLeftBackward board player (x, y) = if (getCell2 board (x,y)  == (tile player
 
 -- | flip_Forward tests to see that there is a bordering piece on the other side of the played cell (checking cells above the played cell)
 flipUpForward :: Board -> Player -> (Int, Int) -> Board
-flipUpForward board player (x,7) = if ((getCell2 board (x,7)) == E)
+flipUpForward board player (x,7) = board
+flipUpForward board player (x,0) = if ((getCell2 board (x,0)) == E)
 					then board
-					else	if ((getCell2 board (x,7)) == tile player)
-						then (flipUpBackward board player (x,6))
+					else	if ((getCell2 board (x,0)) == tile player)
+						then (flipUpBackward board player (x,1))
 						else board
-flipUpForward board player (x,0) = board
 flipUpForward board player (x,y) = if ((getCell2 board (x,y)) == (tile (invertPlayer player)))
 					then (flipUpForward board player (x,y-1))
 					else if (getCell2 board (x,y)) == (tile player)
@@ -537,12 +533,12 @@ flipUpBackward board player (x, y) = if (getCell2 board (x,y)  == (tile player))
 
 -- | flip_Forward tests to see that there is a bordering piece on the other side of the played cell (checking cells below the played cell)
 flipDownForward :: Board -> Player -> (Int, Int) -> Board
-flipDownForward board player (x,0) = if ((getCell2 board (x,0)) == E)
+flipDownForward board player (x,0) = board
+flipDownForward board player (x,7) = if ((getCell2 board (x,7)) == E)
 					then board
-					else	if ((getCell2 board (x,0)) == tile player)
-						then (flipDownBackward board player (x,1))
+					else	if ((getCell2 board (x,7)) == tile player)
+						then (flipDownBackward board player (x,6))
 						else board
-flipDownForward board player (x,7) = board
 flipDownForward board player (x,y) = if ((getCell2 board (x,y)) == (tile (invertPlayer player))) 
 					then (flipDownForward board player (x,y+1))
 					else if (getCell2 board (x,y)) == (tile player)
