@@ -8,25 +8,22 @@ import System.IO.Unsafe
 import Data.Either
 import OthelloTools
 
-{- | This program is used as a template for the CPSC 449  Othello assignment.
-
-Feel free to modify this file as you see fit.
-
-Copyright: Copyright 2015, Rob Kremer (rkremer@ucalgary.ca), University of Calgary. 
-Permission to use, copy, modify, distribute and sell this software
-and its documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation. The University of Calgary makes no representations about the
-suitability of this software for any purpose. It is provided "as is" without
-express or implied warranty.
-
+{- | 
+- The following has been adapted from a template provided by 
+- Dr. Rob Kremer for CPSC 449 - Programming Paradigms
+-
+- This program was completed with a group of five members:
+- Anthony Coulthard
+- Riley Lahd
+- Andrew Lata
+- Kendra Wannamaker
+- Andrew Howell
 -}
 
 ---Main-------------------------------------------------------------
 
-
-main = do--startGame (corners, pickLast) initBoard --main' (unsafePerformIO getArgs)
+-- | the main function is where everything begins...
+main = do
 	args <- getArgs
 
 	if length (args) == 0
@@ -41,20 +38,20 @@ main = do--startGame (corners, pickLast) initBoard --main' (unsafePerformIO getA
 
 		else putStr "Invalid input\nPossible strategies:\n  first\n  last\n  greedy\n  corners\n"
 
+-- | The main' function formats arguments given to be passed to a game function
 main' :: [String] -> IO()
 main' args = do
-
-	--putStrLn "\nThe initial board:"
-	--print initBoard
-
 	startGame args ((stringToPlayer (args !! 0)), (stringToPlayer (args !! 1))) initBoard
 
+-- | startGame sets the initial state of the game envoronment and begin the gameplay recursion
 startGame :: [String] -> (Chooser, Chooser) -> GameState -> IO()
 startGame names (black, white) gamestate = do
 				let currentMove = black gamestate B
 
 				putStrLn (show gamestate)
 				playGame names (white, black) (GameState (Black , (Played (val currentMove))) (flipThis (theBoard gamestate) Black (val currentMove)))
+
+-- | playGame is the main body of the game recursion, and calls appropriate Chooser functions to decide on moves to play
 playGame ::  [String] -> (Chooser, Chooser) -> GameState -> IO()
 playGame names (playing, waiting) gamestate = do
 				let currentPlayer = invertPlayer (fst (play gamestate))
@@ -68,7 +65,9 @@ playGame names (playing, waiting) gamestate = do
 				else	if (playing gamestate (tile currentPlayer) == Nothing)
 					then playGame names (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
 					else playGame names (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
-	
+
+-- | endGame is called when the game has concluded (when both players pass in succession)
+--   it prints the winning player and the score associated
 endGame :: [String] ->  GameState -> (Chooser, Chooser) -> IO()
 endGame names gamestate (one, two) = do
 		let currentPlayer = invertPlayer (fst (play gamestate))		
@@ -89,8 +88,6 @@ checkInput a
 		| a == "first" = True
 		| a == "last" = True
 		| otherwise = False
-		--Andrew is a b
-		--U R A B
 
 -- | this strategy convers input strings to actual function
 stringToPlayer :: String -> Chooser
@@ -114,38 +111,6 @@ getInput = do
 	then main' ([player1] ++ [player2])
 	else putStr "Invalid input\nPossible strategies:\n  first\n  last\n  greedy\n  corners\n"
 
-{- |
-playGame :: (Chooser, Chooser) -> GameState -> Gamestate
-playGame (one, two) gamestate
-				| ((blackPlayer == Nothing) && (whitePlayer == Nothing)) = gamestate
-				| (blackPlayer == Nothing) = playGame (one, two) {(White, whitePlayer), (flipThis (theBoard gamestate) White whitePlayer)}
-				| (whitePlayerAfterBlack == Nothing) = playGame (one, two) {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)}
-				| Otherwise = playGame (one, two) {(White, whitePlayerAfterBlack), (flipThis (theBoard blackGamestate) White whitePlayerAfterBlack)}
-				where blackPlayer = one gamestate B
-				      whitePlayer = two gamestate W
-				      blackGamestate = (theBoard {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)})
-				      whitePlayerAfterBlack = two {(Black, blackPlayer), (flipThis (theBoard gamestate) Black blackPlayer)} W
--}
-    
-{- | We have a main' IO function so that we can either:
-     1. call our program from GHCi in the usual way
-     2. run from the command line by calling this function with the value from (getArgs)
-
-main'           :: [String] -> IO()
-main' args = do
-    putStrLn "\nThe initial board:"
-    print initBoard
-    
-    putStrLn "The initial board rotated 90 degrees:"
-    putBoard $ rotateClock $ theBoard initBoard
-    
-
-    putStrLn "\nThe initial board with reallyStupidStrategy having played one move (clearly illegal!):"
-    let mv = reallyStupidStrategy (initBoard) B
-       in case mv of
-          Nothing   -> putStrLn "Black passed."
-          (Just pt) -> putBoard $ replace2 (theBoard initBoard) pt B
--}
 ---Strategies-------------------------------------------------------
 -- | Takes gamestate and player colour and returns Maybe (int, int)
 -- This AI prioritizes corners, tthen edges, then spaces not touching the edges, then the remaining
@@ -195,32 +160,32 @@ safeZone (coord:left)
 		where x = fst coord
 		      y = snd coord
 
--- | Greedy AI
+-- Greedy AI
 
---Picks the potential move with the highest points value
+-- | Picks the potential move with the highest points value
 greedyPick :: Chooser
 greedyPick gamestate cell
 	|((length validMoves) == 0)= Nothing
 	|otherwise = Just(backToPoint (getMax(map (spotToScored (theBoard gamestate) cell)  validMoves)))
 		where validMoves = (moves (theBoard gamestate) (playerOf cell))
 		
---Creates a data type that hold the score the tile will received and the tile's coordinates 
+-- Creates a data type that hold the score the tile will received and the tile's coordinates 
 data ScoredMove = SM (Int, Int) (Int)
   deriving (Eq)
 
---Gets the score value from ScoredMove  
+-- | Gets the score value from ScoredMove  
 points :: ScoredMove -> Int	
 points (SM _ points) = points
 
---Gets the coordinates value from ScoredMove
+-- | Gets the coordinates value from ScoredMove
 backToPoint :: ScoredMove -> (Int, Int)
 backToPoint (SM (x, y) _) = (x, y)
 
---Makes ScoredMoves	
+-- | Makes ScoredMoves	
 spotToScored :: Board -> Cell ->(Int, Int) -> ScoredMove
 spotToScored board cell(x, y) =  SM (x, y) (score (x, y) board (playerOf cell))
 
---Takes a list of ScoredMoves and returns with the maximum score
+-- | Takes a list of ScoredMoves and returns with the maximum score
 getMax:: [ScoredMove] -> ScoredMove
 getMax (x:[]) = x
 getMax (x:y:[]) 
@@ -230,7 +195,7 @@ getMax (x:y:xs)
 		| (points x) >= (points y) = getMax (x:xs)
 		| otherwise = getMax (y:xs)
 		
---Gives the potential score for each potential move
+-- | Gives the potential score for each potential move
 score :: (Int, Int) -> Board -> Player -> Int
 score (x, y) board player = lineCounts (x, y+1) board player up 
 		    + lineCounts ((x+1), (y+1)) board player upRight 
@@ -241,19 +206,19 @@ score (x, y) board player = lineCounts (x, y+1) board player up
 		    + lineCounts ((x+1), (y-1)) board player downRight
 		    + lineCounts ((x-1), (y-1)) board player downLeft 
 	
---Determines if line should be counted
+-- | Determines if line should be counted
 lineCounts :: (Int, Int) -> Board -> Player -> Direction -> Int
 lineCounts (x,y) board player direction
 			|hasAlly (getList(x,y) board direction) player = score' (x, y) board player direction
 			|otherwise = 0
 			
---Takes a cell and a direction to create an arry from that cell to the edge of the board in the given direction
+-- | Takes a cell and a direction to create an arry from that cell to the edge of the board in the given direction
 getList :: (Int, Int) -> Board -> Direction -> [Cell]
 getList ( x,y) board direction
 			|thisSpace(x, y) == (-1,-1) = []
 			| otherwise = (getCell2 board (x, y)) : (getList (direction(x, y)) board direction)
 			
---Gets the score for a potential move in a particular direction
+-- | Gets the score for a potential move in a particular direction
 score' :: (Int, Int) -> Board -> Player -> Direction -> Int
 score' (x, y) board player direction
 			| thisSpace (x,y) == (-1,-1) = 0
@@ -261,7 +226,7 @@ score' (x, y) board player direction
 			|(cellValue (x, y) player board) == 0 = 0
 			|(cellValue (x, y) player board) == 1 = 1 + (score' (direction (x, y)) board player direction)
 
---Given a cell coordinate and play, assigns a points value if the tile is of the opposite colour
+-- | Given a cell coordinate and play, assigns a points value if the tile is of the opposite colour
 cellValue :: (Int, Int) -> Player -> Board -> Int
 cellValue (x,y) player board 
 			|getCell2 board (x, y) == tile (invertPlayer player) = 1
@@ -316,8 +281,7 @@ rotateCounter     [ [h0, g0, f0, e0, d0, c0, b0, a0],
                     [g0, g1, g2, g3, g4, g5, g6, g7],
                     [h0, h1, h2, h3, h4, h5, h6, h7] ]
 
--- rough implementation of rotate 45
-
+-- | Implementation of rotate 45
 clock45 :: [[Cell]] -> [[Cell]]
 clock45 [ [a0, a1, a2, a3, a4, a5, a6, a7],
    [b0, b1, b2, b3, b4, b5, b6, b7],
@@ -344,6 +308,7 @@ clock45 [ [a0, a1, a2, a3, a4, a5, a6, a7],
    [h6, g7],
    [h7] ]
 
+-- | Rotates the game board 45 degrees counter-clockwise
 counter45 :: [[Cell]] -> [[Cell]]
 counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
       [b0, b1, b2, b3, b4, b5, b6, b7],
@@ -369,6 +334,7 @@ counter45     [ [a0, a1, a2, a3, a4, a5, a6, a7],
       [g0, h1],
       [h0] ]
 
+-- | Restores the board from the diagonal state to a square configuration
 reverseClock45 :: [[a]] -> [[a]]
 reverseClock45         [ [a0],
          [b0, a1],
@@ -394,6 +360,7 @@ reverseClock45         [ [a0],
          [g0, g1, g2, g3, g4, g5, g6, g7],
          [h0, h1, h2, h3, h4, h5, h6, h7] ]
 
+-- | Restores the board from the diagonal state to a square configuration
 reverseCounter45 :: [[a]] -> [[a]]
 reverseCounter45      [[a7],
          [a6, b7],
@@ -513,6 +480,7 @@ val (Just x) = x
 -- | FLIPPING FUNCTIONS -----
 
 -- | flipThis calls each directional flip to flip cells upon a valid play
+--   This function properly adjusts input coordinates to flip the appropriate cells with the other flip_ functions
 flipThis :: [[Cell]] -> Player -> (Int,Int) -> [[Cell]]
 flipThis board player (0,0) = (flipDownRightForward (flipDownForward (flipRightForward (replace2 board (0,0) (tile player)) player (1,0)) player (0,1)) player (1,1))
 flipThis board player (7,0) = (flipDownLeftForward (flipDownForward (flipLeftForward (replace2 board (7,0) (tile player)) player (6,0)) player (7,1)) player (6,1))
