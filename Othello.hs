@@ -60,8 +60,6 @@ playGame names (playing, waiting) gamestate = do
 				putStrLn (show gamestate)
 				if ((waiting gamestate (tile (fst (play gamestate))) == Nothing) && (playing gamestate (tile currentPlayer) == Nothing))
 				then endGame names gamestate (playing, waiting)
-				     --putStrLn (show (GameState (currentPlayer , Passed)  (theBoard gamestate)))
-				     --putStrLn (show (GameState ((invertPlayer currentPlayer) , Passed)  (theBoard gamestate)))
 				else	if (playing gamestate (tile currentPlayer) == Nothing)
 					then playGame names (waiting, playing) (GameState (currentPlayer , Passed)  (theBoard gamestate))
 					else playGame names (waiting, playing) (GameState (currentPlayer , (Played (val currentMove))) (flipThis (theBoard gamestate) currentPlayer (val currentMove)))
@@ -477,7 +475,7 @@ val :: (Maybe (Int, Int)) -> (Int, Int)
 val Nothing = (-1,-1)
 val (Just x) = x
 
--- | FLIPPING FUNCTIONS -----
+-- | FLIPPING FUNCTIONS -------------------------------------------------------------
 
 -- | flipThis calls each directional flip to flip cells upon a valid play
 --   This function properly adjusts input coordinates to flip the appropriate cells with the other flip_ functions
@@ -708,13 +706,6 @@ flipUpRightBackward board player (x,y) =	if getCell2 board (x,y) == tile player
 						then board
 						else flipUpRightBackward (replace2 board (x,y) (tile player)) player (x-1,y+1)
 
--- | flipUpLeftForward tests cells in a diagonal to the left and upwards for a bordering piece
-{-flipUpLeftForward :: Board -> Player -> (Int,Int) -> Board
-flipUpLeftForward board player (x,y) = if (getCell2 board (x,y) == (tile (invertPlayer player)))
-					then (flipUpLeftForward board player (x-1,y-1))
-					else 	if ((getCell2 board (x,y)) == tile player)
-						then (flipUpLeftBackward board player (x+1,y+1))
-						else board-}
 
 -- | Move Checking section ---------------------------------
 
