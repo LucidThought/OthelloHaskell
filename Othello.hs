@@ -99,10 +99,10 @@ stringToPlayer a
 getInput :: IO()
 getInput = do
 	putStr "Possible strategies:\n  first\n  last\n  greedy\n  corners\n"
-	putStr "Enter strategy for BLACK: "
+	putStrLn "Enter strategy for BLACK: "
 	player1 <- getLine
 
-	putStr "Enter strategy for WHITE: "
+	putStrLn "Enter strategy for WHITE: "
 	player2 <- getLine
 
 	if checkInput player1 && checkInput player2
